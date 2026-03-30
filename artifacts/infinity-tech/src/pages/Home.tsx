@@ -72,8 +72,8 @@ const HEADLINE_WORDS = ["ARCHITECTURE", "LOGIC", "SYSTEMS"] as const;
 
 function useWordTypewriter(
   words: readonly string[],
-  charDelay = 150,
-  wordPause = 2000,
+  charDelay = 120,
+  wordPause = 600,
 ) {
   const [typedLines, setTypedLines] = useState<string[]>(() => words.map(() => ""));
   const [activeIdx,  setActiveIdx]  = useState(0);
@@ -165,7 +165,7 @@ export function Home() {
         <div className="flex-none h-16" />
 
         {/* ── MOBILE layout (< lg): natural flow ── */}
-        <div className="lg:hidden flex flex-col px-4 sm:px-6 pt-6 sm:pt-8 pb-12 sm:pb-16 relative z-10">
+        <div className="lg:hidden flex flex-col items-center text-center px-4 sm:px-6 pt-6 sm:pt-8 pb-12 sm:pb-16 relative z-10">
 
           {/* Badge */}
           <motion.div {...fadeUp(0)} className="inline-flex self-center items-center gap-2 px-3 py-1.5 rounded-full bg-card/80 border border-border backdrop-blur-[8px] mb-4">
@@ -281,7 +281,7 @@ export function Home() {
             <div className="grid grid-cols-12 gap-10 xl:gap-14 items-center">
 
               {/* Left column */}
-              <div className="col-span-7 flex flex-col items-start text-left">
+              <div className="col-span-7 flex flex-col items-start">
                 <motion.div {...fadeUp(0)} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/80 border border-border backdrop-blur-[8px] mb-4">
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-50" />
@@ -310,7 +310,7 @@ export function Home() {
                       fontSize: "clamp(2rem, 4vw, 3.4rem)",
                       fontFamily: "var(--font-arabic), sans-serif",
                       direction: "rtl",
-                      textAlign: "right",
+                      textAlign: "center",
                       textShadow: "0 2px 32px rgba(34,211,238,0.10)",
                     }}
                   >
