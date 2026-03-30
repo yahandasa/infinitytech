@@ -63,13 +63,18 @@ function PublicRoutes() {
      * switch feels polished rather than an instant layout snap.
      */
     <div
-      dir={isRTL ? "rtl" : "ltr"}
+      dir="ltr"
       style={{
         opacity: isTransitioning ? 0 : 1,
         transition: "opacity 0.16s ease",
+        /*
+         * Font family switches with language.
+         * Layout stays LTR — Arabic text renders via unicode bidi + text-align,
+         * not by flipping the containing block direction.
+         */
         fontFamily: isRTL
-          ? "var(--font-arabic, 'IBM Plex Sans Arabic'), sans-serif"
-          : "var(--font-sans, Inter, system-ui), sans-serif",
+          ? "'Cairo', 'IBM Plex Sans Arabic', sans-serif"
+          : "'Inter', 'Space Grotesk', system-ui, sans-serif",
       }}
       className="flex-grow"
     >

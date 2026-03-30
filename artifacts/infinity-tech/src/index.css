@@ -88,9 +88,14 @@
   }
 
 
-  /* Arabic / RTL typography */
-  [dir="rtl"], [lang="ar"] {
-    font-family: var(--font-arabic);
+  /*
+   * Arabic typography — triggered by [lang="ar"] on <html>.
+   * Layout stays LTR; only font metrics change.
+   * letter-spacing: 0 prevents Latin tracking from breaking Arabic glyphs.
+   * line-height: 1.8 gives Arabic descenders room to breathe.
+   */
+  [lang="ar"] {
+    font-family: 'Cairo', 'IBM Plex Sans Arabic', var(--font-arabic), sans-serif;
     letter-spacing: 0;
     line-height: 1.8;
   }

@@ -198,7 +198,7 @@ export function ProjectDetail() {
   const publicUpdates = project.updates.filter(u => !u.adminOnly);
 
   return (
-    <div className="min-h-screen w-full pt-28 pb-24 relative" dir={isRTL ? "rtl" : "ltr"}>
+    <div className="min-h-screen w-full pt-28 pb-24 relative" dir="ltr">
       <SEO
         title={t(project.title, project.titleAr || project.title)}
         description={t(project.description, project.descriptionAr || project.description)}

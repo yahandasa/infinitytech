@@ -5,51 +5,71 @@ export type Language = "en" | "ar";
 interface LanguageContextType {
   lang: Language;
   setLang: (l: Language) => void;
+  /** true when Arabic is active — used for font/text-align switching, NOT layout direction */
   isRTL: boolean;
   isTransitioning: boolean;
   t: (en: string, ar: string) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType>({
-  lang: "en",
+  lang: "ar",
   setLang: () => {},
-  isRTL: false,
+  isRTL: true,
   isTransitioning: false,
-  t: (en) => en,
+  t: (_en, ar) => ar,
 });
 
 const TRANSITION_MS = 160;
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
+  /*
+   * Default language is Arabic.
+   * Layout is ALWAYS LTR — Arabic is handled via font + per-element text-align,
+   * not by flipping the global layout direction.
+   */
   const [lang, setLangState] = useState<Language>(() => {
-    return (localStorage.getItem("it-lang") as Language) || "en";
+    const stored = localStorage.getItem("it-lang") as Language | null;
+    return stored || "ar";
   });
   const [isTransitioning, setIsTransitioning] = useState(false);
 
+  /** Convenience alias — means "Arabic is active", NOT "layout is RTL" */
   const isRTL = lang === "ar";
 
-  /* Sync dir/lang attrs on <html> so the browser scrollbar and
-     OS accessibility tools get the correct reading direction.
-     Header, Hero, and Footer override this with dir="ltr" explicitly. */
   useEffect(() => {
     const root = document.documentElement;
-    root.setAttribute("dir", isRTL ? "rtl" : "ltr");
-    root.setAttribute("lang", lang);
-    localStorage.setItem("it-lang", lang);
-  }, [lang, isRTL]);
 
-  /* Fade content out → switch → fade back in */
-  const setLang = useCallback((l: Language) => {
-    if (l === lang) return;
-    setIsTransitioning(true);
-    setTimeout(() => {
-      setLangState(l);
-      /* Small extra tick so the new dir has painted before we fade back */
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => setIsTransitioning(false));
-      });
-    }, TRANSITION_MS);
+    /*
+     * Layout direction: ALWAYS ltr.
+     * The page structure never flips — Arabic text uses text-align / unicode
+     * bidi for correct rendering inside an LTR grid.
+     */
+    root.setAttribute("dir", "ltr");
+
+    /*
+     * lang attribute drives the CSS font rule in index.css:
+     *   [lang="ar"] { font-family: var(--font-arabic); ... }
+     * It also benefits screen readers and SEO crawlers.
+     */
+    root.setAttribute("lang", lang);
+
+    localStorage.setItem("it-lang", lang);
   }, [lang]);
+
+  /** Fade content out → swap language → fade back in */
+  const setLang = useCallback(
+    (l: Language) => {
+      if (l === lang) return;
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setLangState(l);
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => setIsTransitioning(false))
+        );
+      }, TRANSITION_MS);
+    },
+    [lang],
+  );
 
   const t = (en: string, ar: string) => (lang === "ar" ? ar : en);
 
