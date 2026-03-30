@@ -77,12 +77,11 @@ function Cursor() {
 const TYPING_PHRASES = [
   "Advanced PCB Design",
   "Precision Embedded Firmware",
-  "High-Performance Circuit Systems",
   "From Concept to Production",
 ] as const;
 
 /* Longest phrase — used to anchor layout width so nothing shifts */
-const ANCHOR_PHRASE = "High-Performance Circuit Systems";
+const ANCHOR_PHRASE = "Precision Embedded Firmware";
 
 type Phase = "typing" | "hold" | "deleting" | "gap";
 
@@ -215,7 +214,7 @@ export function Home() {
               <span
                 aria-hidden
                 className="invisible whitespace-nowrap font-black tracking-tight"
-                style={{ fontSize: "clamp(1.75rem, 7.5vw, 2.4rem)" }}
+                style={{ fontSize: "clamp(2.1rem, 9vw, 3rem)" }}
               >
                 {ANCHOR_PHRASE}
               </span>
@@ -223,7 +222,7 @@ export function Home() {
                 <span
                   className="whitespace-nowrap font-black tracking-tight text-foreground"
                   style={{
-                    fontSize: "clamp(1.75rem, 7.5vw, 2.4rem)",
+                    fontSize: "clamp(2.1rem, 9vw, 3rem)",
                   }}
                 >
                   {headlineText.split(" ").map((word, wi, arr) => (
@@ -305,14 +304,14 @@ export function Home() {
                     <span
                       aria-hidden
                       className="invisible whitespace-nowrap font-black tracking-tighter leading-tight"
-                      style={{ fontSize: "clamp(2.2rem, 3.8vw, 3.5rem)" }}
+                      style={{ fontSize: "clamp(2.8rem, 4.8vw, 4.5rem)" }}
                     >
                       {ANCHOR_PHRASE}
                     </span>
                     <span className="absolute inset-0 flex items-center gap-[4px]">
                       <span
                         className="whitespace-nowrap font-black tracking-tighter leading-tight text-foreground"
-                        style={{ fontSize: "clamp(2.2rem, 3.8vw, 3.5rem)" }}
+                        style={{ fontSize: "clamp(2.8rem, 4.8vw, 4.5rem)" }}
                       >
                         {headlineText.split(" ").map((word, wi, arr) => (
                           <span key={wi}>
