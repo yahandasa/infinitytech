@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { supabaseAdmin } from "../lib/supabase";
 import { getUploadSignature } from "../lib/cloudinary";
+import { autoTranslateFields, translate } from "../lib/translate";
 
 const router = Router();
 
@@ -63,19 +64,19 @@ router.get("/projects/:id", async (req, res) => {
 // POST /api/projects — admin only
 router.post("/projects", requireAdmin, async (req, res) => {
   try {
-    const body = sanitizeBody(req.body);
-    const { title_en } = body as any;
-    if (!title_en) return res.status(400).json({ error: "title_en is required" });
+    let body = sanitizeBody(req.body) as any;
+    if (!body.title_en && !body.title_ar) {
+      return res.status(400).json({ error: "title_en or title_ar is required" });
+    }
+
+    body = await autoTranslateFields(body);
 
     const { data, error } = await supabaseAdmin
       .from("projects")
       .insert({
         ...body,
-        title_ar: (body as any).title_ar || "",
-        description_en: (body as any).description_en || "",
-        description_ar: (body as any).description_ar || "",
-        tags: (body as any).tags || [],
-        status: (body as any).status || "active",
+        tags: body.tags || [],
+        status: body.status || "active",
       })
       .select()
       .single();
@@ -90,10 +91,12 @@ router.post("/projects", requireAdmin, async (req, res) => {
 // PATCH /api/projects/:id — admin only
 router.patch("/projects/:id", requireAdmin, async (req, res) => {
   try {
-    const body = sanitizeBody(req.body);
+    let body = sanitizeBody(req.body) as any;
     if (Object.keys(body).length === 0) {
       return res.status(400).json({ error: "No valid fields to update" });
     }
+
+    body = await autoTranslateFields(body);
 
     const { data, error } = await supabaseAdmin
       .from("projects")
@@ -104,6 +107,47 @@ router.patch("/projects/:id", requireAdmin, async (req, res) => {
 
     if (error) throw error;
     res.json({ project: data });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/projects/:id/translate — admin only
+// Back-fills missing AR fields for an existing project
+router.post("/projects/:id/translate", requireAdmin, async (req, res) => {
+  try {
+    const { data: existing, error: fetchErr } = await supabaseAdmin
+      .from("projects")
+      .select("*")
+      .eq("id", req.params.id)
+      .single();
+
+    if (fetchErr || !existing) return res.status(404).json({ error: "Project not found" });
+
+    const fields = {
+      title_en: existing.title_en,
+      title_ar: existing.title_ar || "",
+      description_en: existing.description_en,
+      description_ar: existing.description_ar || "",
+      overview_en: existing.overview_en,
+      overview_ar: existing.overview_ar || "",
+      problem_en: existing.problem_en,
+      problem_ar: existing.problem_ar || "",
+      solution_en: existing.solution_en,
+      solution_ar: existing.solution_ar || "",
+    } as any;
+
+    const translated = await autoTranslateFields(fields);
+
+    const { data, error } = await supabaseAdmin
+      .from("projects")
+      .update(translated)
+      .eq("id", req.params.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json({ project: data, translated: true });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

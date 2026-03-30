@@ -1,4 +1,11 @@
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  type ReactNode,
+} from "react";
 
 export type Language = "en" | "ar";
 
@@ -8,7 +15,14 @@ interface LanguageContextType {
   /** true when Arabic is active — used for font/text-align switching, NOT layout direction */
   isRTL: boolean;
   isTransitioning: boolean;
-  t: (en: string, ar: string) => string;
+  /**
+   * Pick the right language string (or any ReactNode).
+   * Works for plain strings AND JSX fragments with styled spans.
+   *
+   * t("View Details", "عرض التفاصيل")
+   * t(<>Projects <span className="text-primary">&</span> Research</>, <>المشاريع</>)
+   */
+  t: <T extends ReactNode>(en: T, ar: T) => T;
 }
 
 const LanguageContext = createContext<LanguageContextType>({
@@ -21,7 +35,7 @@ const LanguageContext = createContext<LanguageContextType>({
 
 const TRANSITION_MS = 160;
 
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
+export function LanguageProvider({ children }: { children: ReactNode }) {
   /*
    * Default language is Arabic.
    * Layout is ALWAYS LTR — Arabic is handled via font + per-element text-align,
@@ -71,7 +85,9 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     [lang],
   );
 
-  const t = (en: string, ar: string) => (lang === "ar" ? ar : en);
+  function t<T extends ReactNode>(en: T, ar: T): T {
+    return lang === "ar" ? ar : en;
+  }
 
   return (
     <LanguageContext.Provider value={{ lang, setLang, isRTL, isTransitioning, t }}>
