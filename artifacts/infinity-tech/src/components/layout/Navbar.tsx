@@ -16,7 +16,7 @@ const navLinks = [
 export function Navbar() {
   const [isScrolled,  setIsScrolled]  = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { lang, setLang, t } = useLanguage();
+  const { lang, setLang } = useLanguage();
   const [location] = useLocation();
 
   useEffect(() => {
@@ -35,6 +35,7 @@ export function Navbar() {
   return (
     <>
       <header
+        dir="ltr"
         className={cn(
           "fixed top-0 left-0 right-0 z-50 backdrop-blur-xl saturate-150",
           "bg-[#0F172A]/40 border-b border-white/5",
@@ -108,7 +109,7 @@ export function Navbar() {
                       isActive ? "text-white" : "text-slate-400 hover:text-white"
                     )}
                   >
-                    {t(link.name, link.nameAr)}
+                    {link.name}
                     <span className={cn(
                       "absolute bottom-1.5 left-4 right-4 h-px bg-gradient-to-r from-transparent via-primary to-transparent rounded-full transition-transform duration-300 ease-out origin-center",
                       isActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
@@ -188,6 +189,7 @@ export function Navbar() {
               animate={{ x: 0,     opacity: 1 }}
               exit={{    x: "100%", opacity: 0 }}
               transition={{ type: "spring", stiffness: 320, damping: 30 }}
+              dir="ltr"
               className="fixed top-0 right-0 bottom-0 z-50 w-[280px] flex flex-col md:hidden border-l border-primary/10"
               style={{ backgroundColor: "rgba(15, 23, 42, 0.97)", backdropFilter: "blur(20px)" }}
             >
@@ -242,7 +244,7 @@ export function Navbar() {
                             : "text-muted-foreground hover:text-foreground hover:bg-white/5 border-transparent hover:border-white/8"
                         )}
                       >
-                        {t(link.name, link.nameAr)}
+                        {link.name}
                       </Link>
                     </motion.div>
                   );

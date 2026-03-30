@@ -47,34 +47,53 @@ function PageFallback() {
 
 function PublicRoutes() {
   const [location] = useLocation();
-  const { lang } = useLanguage();
+  const { lang, isRTL, isTransitioning } = useLanguage();
 
   useEffect(() => {
     trackPageView(location, lang);
   }, [location, lang]);
 
   return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={location}
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -10 }}
-        transition={{ duration: 0.22, ease: "easeInOut" }}
-        className="flex-grow"
-      >
-        <Suspense fallback={<PageFallback />}>
-          <Switch>
-            <Route path="/" component={Home} />
-            <Route path="/projects" component={Projects} />
-            <Route path="/projects/:id" component={ProjectDetail} />
-            <Route path="/about" component={About} />
-            <Route path="/contact" component={Contact} />
-            <Route component={NotFound} />
-          </Switch>
-        </Suspense>
-      </motion.div>
-    </AnimatePresence>
+    /*
+     * Content shell — this is the ONLY layer that responds to RTL.
+     * Navbar, Hero, and Footer pin themselves to dir="ltr" explicitly
+     * so the language toggle only affects this content region.
+     *
+     * isTransitioning drives a 160ms opacity fade so the direction
+     * switch feels polished rather than an instant layout snap.
+     */
+    <div
+      dir={isRTL ? "rtl" : "ltr"}
+      style={{
+        opacity: isTransitioning ? 0 : 1,
+        transition: "opacity 0.16s ease",
+        fontFamily: isRTL
+          ? "var(--font-arabic, 'IBM Plex Sans Arabic'), sans-serif"
+          : "var(--font-sans, Inter, system-ui), sans-serif",
+      }}
+      className="flex-grow"
+    >
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={location}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.22, ease: "easeInOut" }}
+        >
+          <Suspense fallback={<PageFallback />}>
+            <Switch>
+              <Route path="/" component={Home} />
+              <Route path="/projects" component={Projects} />
+              <Route path="/projects/:id" component={ProjectDetail} />
+              <Route path="/about" component={About} />
+              <Route path="/contact" component={Contact} />
+              <Route component={NotFound} />
+            </Switch>
+          </Suspense>
+        </motion.div>
+      </AnimatePresence>
+    </div>
   );
 }
 

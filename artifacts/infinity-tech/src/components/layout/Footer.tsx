@@ -91,7 +91,7 @@ const socials = [
 /* ─── component ──────────────────────────────────────────── */
 export function Footer() {
   return (
-    <footer className="relative bg-[#0A0E13] mt-auto overflow-hidden">
+    <footer dir="ltr" className="relative bg-[#0A0E13] mt-auto overflow-hidden">
       {/* Top accent line */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[rgba(34,211,238,0.25)] to-transparent" />
 

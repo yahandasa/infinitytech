@@ -158,7 +158,8 @@ export function Home() {
       />
 
       {/* ── Hero ─────────────────────────────────────────────── */}
-      <section className="relative w-full lg:h-[100dvh] overflow-hidden flex flex-col">
+      {/* dir="ltr" locks the hero to English layout regardless of the AR/EN toggle */}
+      <section dir="ltr" className="relative w-full lg:h-[100dvh] overflow-hidden flex flex-col">
 
         {/* Background glow */}
         <div
