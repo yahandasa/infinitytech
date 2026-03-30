@@ -202,63 +202,42 @@ export function Home() {
             </span>
           </motion.div>
 
-          {/* Static bilingual headline */}
-          <div className="mb-5 text-center relative">
-            {/* Radial glow behind text */}
-            <div
-              aria-hidden
-              className="absolute -inset-8 -z-10 pointer-events-none"
-              style={{
-                background:
-                  "radial-gradient(ellipse 80% 60% at 50% 50%, rgba(30,41,59,0.55) 0%, rgba(15,23,42,0.0) 75%)",
-              }}
-            />
-            {/* Arabic design headline */}
-            <h1
-              className="font-black leading-[1.25] tracking-tight text-[#F8FAFC] mb-4"
-              style={{
-                fontSize: "clamp(1.7rem, 6vw, 2.4rem)",
-                fontFamily: "var(--font-arabic), sans-serif",
-                direction: "rtl",
-                textShadow: "0 2px 24px rgba(34,211,238,0.10)",
-              }}
-            >
-              هندسة التفاصيل.. إتقان النظم.
-            </h1>
-
-            {/* Animated typing line — mobile */}
-            <div
-              className="flex items-center justify-center select-none"
-              aria-label="Typing: Advanced PCB Design · Precision Embedded Firmware · High-Performance Circuit Systems · From Concept to Production"
-            >
-              {/*
-               * Invisible anchor span holds the width of the longest phrase
-               * so the layout never jumps as different-length phrases type in.
-               * The visible text is layered absolutely on top of it.
-               */}
-              <span className="relative inline-block">
-                <span
-                  aria-hidden
-                  className="invisible whitespace-nowrap font-semibold tracking-wide"
-                  style={{ fontSize: "clamp(0.9rem, 3.2vw, 1.05rem)" }}
-                >
-                  {ANCHOR_PHRASE}
-                </span>
-                <span className="absolute inset-0 flex items-center justify-center gap-[3px]">
-                  <span
-                    className="whitespace-nowrap font-semibold tracking-wide text-primary"
-                    style={{
-                      fontSize: "clamp(0.9rem, 3.2vw, 1.05rem)",
-                      textShadow: "0 0 18px rgba(34,211,238,0.40)",
-                    }}
-                  >
-                    {headlineText}
-                  </span>
-                  <span className="flex-shrink-0"><Cursor /></span>
-                </span>
+          {/* Typing headline — mobile */}
+          <h1
+            className="mb-6 text-center select-none relative"
+            aria-label="Advanced PCB Design · Precision Embedded Firmware · High-Performance Circuit Systems · From Concept to Production"
+          >
+            {/*
+             * Invisible anchor holds the width of the longest phrase
+             * so the container never resizes as phrases cycle — zero layout shift.
+             */}
+            <span className="relative inline-block">
+              <span
+                aria-hidden
+                className="invisible whitespace-nowrap font-black tracking-tight"
+                style={{ fontSize: "clamp(1.75rem, 7.5vw, 2.4rem)" }}
+              >
+                {ANCHOR_PHRASE}
               </span>
-            </div>
-          </div>
+              <span className="absolute inset-0 flex items-center justify-center gap-[3px]">
+                <span
+                  className="whitespace-nowrap font-black tracking-tight text-foreground"
+                  style={{
+                    fontSize: "clamp(1.75rem, 7.5vw, 2.4rem)",
+                  }}
+                >
+                  {headlineText.split(" ").map((word, wi, arr) => (
+                    <span key={wi}>
+                      {wi === arr.length - 1
+                        ? <span className="text-primary" style={{ textShadow: "0 0 28px rgba(34,211,238,0.45)" }}>{word}</span>
+                        : <>{word} </>}
+                    </span>
+                  ))}
+                </span>
+                <span className="flex-shrink-0"><Cursor /></span>
+              </span>
+            </span>
+          </h1>
 
           {/* Subtitle */}
           <motion.p
@@ -313,63 +292,40 @@ export function Home() {
                   </span>
                 </motion.div>
 
-                {/* Static bilingual headline — desktop */}
-                <div className="mb-6 relative">
-                  {/* Radial glow behind text */}
-                  <div
-                    aria-hidden
-                    className="absolute -inset-10 -z-10 pointer-events-none"
-                    style={{
-                      background:
-                        "radial-gradient(ellipse 90% 70% at 50% 50%, rgba(30,41,59,0.6) 0%, rgba(15,23,42,0.0) 72%)",
-                    }}
-                  />
-                  {/* Arabic design headline */}
-                  <h1
-                    className="font-black leading-[1.2] tracking-tight text-[#F8FAFC] mb-5"
-                    style={{
-                      fontSize: "clamp(2rem, 4vw, 3.4rem)",
-                      fontFamily: "var(--font-arabic), sans-serif",
-                      direction: "rtl",
-                      textShadow: "0 2px 32px rgba(34,211,238,0.10)",
-                    }}
-                  >
-                    هندسة التفاصيل.. إتقان النظم.
-                  </h1>
-
-                  {/* Animated typing line — desktop */}
-                  <div
-                    className="flex items-center select-none"
-                    aria-label="Typing: Advanced PCB Design · Precision Embedded Firmware · High-Performance Circuit Systems · From Concept to Production"
-                  >
-                    {/*
-                     * Invisible anchor span holds the width of the longest phrase
-                     * so the layout never shifts as different-length phrases cycle.
-                     * The visible text is positioned absolutely on top of it.
-                     */}
-                    <span className="relative inline-block">
-                      <span
-                        aria-hidden
-                        className="invisible whitespace-nowrap font-semibold tracking-wide"
-                        style={{ fontSize: "clamp(0.95rem, 1.55vw, 1.25rem)" }}
-                      >
-                        {ANCHOR_PHRASE}
-                      </span>
-                      <span className="absolute inset-0 flex items-center gap-[3px]">
-                        <span
-                          className="whitespace-nowrap font-semibold tracking-wide text-primary"
-                          style={{
-                            fontSize: "clamp(0.95rem, 1.55vw, 1.25rem)",
-                            textShadow: "0 0 22px rgba(34,211,238,0.38)",
-                          }}
-                        >
-                          {headlineText}
-                        </span>
-                        <span className="flex-shrink-0"><Cursor /></span>
-                      </span>
+                {/* Typing headline — desktop */}
+                <h1
+                  className="mb-6 select-none relative"
+                  aria-label="Advanced PCB Design · Precision Embedded Firmware · High-Performance Circuit Systems · From Concept to Production"
+                >
+                  {/*
+                   * Invisible anchor holds the width of the longest phrase
+                   * so the container never resizes as phrases cycle — zero layout shift.
+                   */}
+                  <span className="relative inline-block">
+                    <span
+                      aria-hidden
+                      className="invisible whitespace-nowrap font-black tracking-tighter leading-tight"
+                      style={{ fontSize: "clamp(2.2rem, 3.8vw, 3.5rem)" }}
+                    >
+                      {ANCHOR_PHRASE}
                     </span>
-                  </div>
-                </div>
+                    <span className="absolute inset-0 flex items-center gap-[4px]">
+                      <span
+                        className="whitespace-nowrap font-black tracking-tighter leading-tight text-foreground"
+                        style={{ fontSize: "clamp(2.2rem, 3.8vw, 3.5rem)" }}
+                      >
+                        {headlineText.split(" ").map((word, wi, arr) => (
+                          <span key={wi}>
+                            {wi === arr.length - 1
+                              ? <span className="text-primary" style={{ textShadow: "0 0 36px rgba(34,211,238,0.5)" }}>{word}</span>
+                              : <>{word} </>}
+                          </span>
+                        ))}
+                      </span>
+                      <span className="flex-shrink-0"><Cursor /></span>
+                    </span>
+                  </span>
+                </h1>
 
                 <motion.p
                   {...fadeUp(0.38)}
