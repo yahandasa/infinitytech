@@ -66,6 +66,55 @@ function Cursor() {
   );
 }
 
+/* ─── headline word typewriter ──────────────────────────── */
+
+const HEADLINE_WORDS = ["ARCHITECTURE", "LOGIC", "SYSTEMS"] as const;
+
+function useWordTypewriter(
+  words: readonly string[],
+  charDelay = 150,
+  wordPause = 2000,
+) {
+  const [typedLines, setTypedLines] = useState<string[]>(() => words.map(() => ""));
+  const [activeIdx,  setActiveIdx]  = useState(0);
+  const [done,       setDone]       = useState(false);
+
+  useEffect(() => {
+    if (done) return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout>;
+
+    function typeChar(wIdx: number, cIdx: number) {
+      if (cancelled) return;
+      const word = words[wIdx];
+      setTypedLines(prev => {
+        const next = [...prev];
+        next[wIdx] = word.slice(0, cIdx);
+        return next;
+      });
+      if (cIdx < word.length) {
+        const jitter = charDelay * (0.7 + Math.random() * 0.6);
+        timer = setTimeout(() => typeChar(wIdx, cIdx + 1), jitter);
+      } else {
+        const nextWIdx = wIdx + 1;
+        if (nextWIdx < words.length) {
+          timer = setTimeout(() => {
+            if (!cancelled) { setActiveIdx(nextWIdx); typeChar(nextWIdx, 0); }
+          }, wordPause);
+        } else {
+          if (!cancelled) { setDone(true); setActiveIdx(-1); }
+        }
+      }
+    }
+
+    timer = setTimeout(() => typeChar(0, 0), 500);
+    return () => { cancelled = true; clearTimeout(timer); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return { typedLines, activeIdx };
+}
+
 /* ─── metrics ────────────────────────────────────────────── */
 
 const METRICS = [
@@ -89,6 +138,7 @@ export function Home() {
   const { data: projects, isLoading } = useProjects();
   const featuredProjects = projects?.slice(0, 3) || [];
   const { displayed: codeDisplayed, done: codeDone } = useCodeTypewriter(CODE_SNIPPET, 600);
+  const { typedLines: headlineLines, activeIdx: headlineActive } = useWordTypewriter(HEADLINE_WORDS);
 
   return (
     <div className="w-full flex flex-col min-h-screen">
@@ -151,18 +201,42 @@ export function Home() {
             >
               هندسة التفاصيل.. إتقان النظم.
             </h1>
-            {/* English static sub-text */}
-            <p
-              className="tracking-[0.28em] text-[#E2E8F0]/80 font-semibold uppercase select-none"
-              style={{ fontSize: "clamp(0.6rem, 2.2vw, 0.72rem)", letterSpacing: "0.28em" }}
+            {/* Animated word row — mobile */}
+            <div
+              className="flex items-center justify-center gap-0 select-none"
               aria-label="Architecture · Logic · Systems"
             >
-              ARCHITECTURE
-              <span aria-hidden className="opacity-20 mx-3 font-thin">|</span>
-              LOGIC
-              <span aria-hidden className="opacity-20 mx-3 font-thin">|</span>
-              SYSTEMS
-            </p>
+              {HEADLINE_WORDS.map((word, i) => (
+                <span key={word} className="inline-flex items-center">
+                  {i > 0 && (
+                    <span aria-hidden className="opacity-20 font-thin text-[#E2E8F0] mx-2 flex-shrink-0 text-[0.7rem]">|</span>
+                  )}
+                  {/* Size-reserved container — width locked to "ARCHITECTURE" + cursor */}
+                  <span className="relative inline-block">
+                    {/* Invisible spacer — sets exact container width, same font metrics */}
+                    <span
+                      aria-hidden
+                      className="invisible select-none whitespace-nowrap font-semibold uppercase"
+                      style={{ fontSize: "clamp(0.6rem, 2.2vw, 0.72rem)", letterSpacing: "0.28em" }}
+                    >
+                      ARCHITECTURE&thinsp;
+                    </span>
+                    {/* Actual typed text + cursor — absolutely overlaid */}
+                    <span className="absolute inset-0 flex items-center">
+                      <span
+                        className="whitespace-nowrap font-semibold uppercase text-[#E2E8F0]/80"
+                        style={{ fontSize: "clamp(0.6rem, 2.2vw, 0.72rem)", letterSpacing: "0.28em" }}
+                      >
+                        {headlineLines[i]}
+                      </span>
+                      {headlineActive === i && (
+                        <span className="flex-shrink-0"><Cursor /></span>
+                      )}
+                    </span>
+                  </span>
+                </span>
+              ))}
+            </div>
           </div>
 
           {/* Subtitle */}
@@ -242,18 +316,42 @@ export function Home() {
                   >
                     هندسة التفاصيل.. إتقان النظم.
                   </h1>
-                  {/* English static sub-text */}
-                  <p
-                    className="text-[#E2E8F0]/70 font-semibold uppercase tracking-[0.3em] select-none"
-                    style={{ fontSize: "clamp(0.58rem, 1vw, 0.7rem)" }}
+                  {/* Animated word row — desktop */}
+                  <div
+                    className="flex items-center gap-0 select-none"
                     aria-label="Architecture · Logic · Systems"
                   >
-                    ARCHITECTURE
-                    <span aria-hidden className="opacity-20 mx-3 font-thin">|</span>
-                    LOGIC
-                    <span aria-hidden className="opacity-20 mx-3 font-thin">|</span>
-                    SYSTEMS
-                  </p>
+                    {HEADLINE_WORDS.map((word, i) => (
+                      <span key={word} className="inline-flex items-center">
+                        {i > 0 && (
+                          <span aria-hidden className="opacity-20 font-thin text-[#E2E8F0] mx-2 flex-shrink-0 text-[0.65rem]">|</span>
+                        )}
+                        {/* Size-reserved container — width locked to "ARCHITECTURE" + cursor */}
+                        <span className="relative inline-block">
+                          {/* Invisible spacer — same font metrics, anchors container width */}
+                          <span
+                            aria-hidden
+                            className="invisible select-none whitespace-nowrap font-semibold uppercase"
+                            style={{ fontSize: "clamp(0.58rem, 1vw, 0.7rem)", letterSpacing: "0.3em" }}
+                          >
+                            ARCHITECTURE&thinsp;
+                          </span>
+                          {/* Actual typed text + cursor */}
+                          <span className="absolute inset-0 flex items-center">
+                            <span
+                              className="whitespace-nowrap font-semibold uppercase text-[#E2E8F0]/70"
+                              style={{ fontSize: "clamp(0.58rem, 1vw, 0.7rem)", letterSpacing: "0.3em" }}
+                            >
+                              {headlineLines[i]}
+                            </span>
+                            {headlineActive === i && (
+                              <span className="flex-shrink-0"><Cursor /></span>
+                            )}
+                          </span>
+                        </span>
+                      </span>
+                    ))}
+                  </div>
                 </div>
 
                 <motion.p
