@@ -7,8 +7,6 @@ import { SEO, SITE_JSONLD, PERSON_JSONLD } from "@/components/SEO";
 
 /* ─── constants ─────────────────────────────────────────── */
 
-const HEADLINE_LINES = ["ARCHITECTURE", "LOGIC", "SYSTEMS"];
-
 const CODE_SNIPPET = `// PCB system init — CISPR 32B compliant
 #define IMU_RATE_HZ   8000
 #define SW_FREQ_KHZ    500
@@ -24,54 +22,6 @@ const CHAR_BASE      = 55;
 const CHAR_VARIANCE  = 0.4;
 const PUNCT_PAUSE    = 180;
 const NEWLINE_PAUSE  = 320;
-
-/* ─── headline typewriter ────────────────────────────────── */
-
-function useHeadlineTypewriter(lines: string[], charDelay = 145, startDelay = 350) {
-  const liRef   = useRef(0);
-  const ciRef   = useRef(0);
-  const doneRef = useRef(false);
-  const [tick, setTick] = useState(0);
-
-  useEffect(() => {
-    let timer: ReturnType<typeof setTimeout>;
-
-    const step = () => {
-      if (doneRef.current) return;
-      const li = liRef.current;
-      const ci = ciRef.current;
-      if (li >= lines.length) { doneRef.current = true; setTick(t => t + 1); return; }
-      const currentLine = lines[li];
-      if (ci < currentLine.length) {
-        ciRef.current = ci + 1;
-        setTick(t => t + 1);
-        const ch     = currentLine[ci];
-        const jitter = charDelay * (0.6 + Math.random() * 0.8);
-        const extra  = ch === "-" ? 80 : 0;
-        timer = setTimeout(step, jitter + extra);
-      } else {
-        const isLast = li + 1 >= lines.length;
-        timer = setTimeout(() => {
-          if (isLast) { doneRef.current = true; setTick(t => t + 1); }
-          else { liRef.current = li + 1; ciRef.current = 0; step(); }
-        }, 650);
-      }
-    };
-
-    timer = setTimeout(step, startDelay);
-    return () => clearTimeout(timer);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  void tick;
-  const li   = liRef.current;
-  const ci   = ciRef.current;
-  const done = doneRef.current;
-  const typedLines = lines.map((line, i) =>
-    i < li ? line : i === li ? line.slice(0, ci) : ""
-  );
-  return { typedLines, done, activeLineIdx: done ? -1 : li };
-}
 
 /* ─── code typewriter ────────────────────────────────────── */
 
@@ -139,7 +89,6 @@ export function Home() {
   const { data: projects, isLoading } = useProjects();
   const featuredProjects = projects?.slice(0, 3) || [];
   const { displayed: codeDisplayed, done: codeDone } = useCodeTypewriter(CODE_SNIPPET, 600);
-  const { typedLines, activeLineIdx } = useHeadlineTypewriter(HEADLINE_LINES);
 
   return (
     <div className="w-full flex flex-col min-h-screen">
@@ -169,7 +118,7 @@ export function Home() {
         <div className="lg:hidden flex flex-col px-4 sm:px-6 pt-6 sm:pt-8 pb-12 sm:pb-16 relative z-10">
 
           {/* Badge */}
-          <motion.div {...fadeUp(0)} className="inline-flex self-start items-center gap-2 px-3 py-1.5 rounded-full bg-card/80 border border-border backdrop-blur-[8px] mb-4">
+          <motion.div {...fadeUp(0)} className="inline-flex self-center items-center gap-2 px-3 py-1.5 rounded-full bg-card/80 border border-border backdrop-blur-[8px] mb-4">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-50" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
@@ -179,25 +128,41 @@ export function Home() {
             </span>
           </motion.div>
 
-          {/* Headline */}
-          <div
-            className="mb-4 text-[2rem] sm:text-[2.5rem] font-black tracking-tighter leading-[1.08]"
-            aria-label={HEADLINE_LINES.join(" · ")}
-          >
-            {HEADLINE_LINES.map((line, i) => (
-              <div key={line} className="flex items-center gap-2 leading-[1.08]">
-                {i > 0 && (
-                  <span aria-hidden className="text-primary/20 font-thin text-[1rem] sm:text-[1.25rem] leading-none select-none flex-shrink-0">|</span>
-                )}
-                <span className={`whitespace-nowrap ${
-                  i === 0 ? "text-foreground" :
-                  i === 1 ? "text-primary" :
-                  "text-foreground/65"
-                }`}>
-                  {typedLines[i]}{activeLineIdx === i && <Cursor />}
-                </span>
-              </div>
-            ))}
+          {/* Static bilingual headline */}
+          <div className="mb-5 text-center relative">
+            {/* Radial glow behind text */}
+            <div
+              aria-hidden
+              className="absolute -inset-8 -z-10 pointer-events-none"
+              style={{
+                background:
+                  "radial-gradient(ellipse 80% 60% at 50% 50%, rgba(30,41,59,0.55) 0%, rgba(15,23,42,0.0) 75%)",
+              }}
+            />
+            {/* Arabic headline */}
+            <h1
+              className="font-black leading-[1.25] tracking-tight text-[#F8FAFC] mb-3"
+              style={{
+                fontSize: "clamp(1.7rem, 6vw, 2.4rem)",
+                fontFamily: "var(--font-arabic), sans-serif",
+                direction: "rtl",
+                textShadow: "0 2px 24px rgba(34,211,238,0.10)",
+              }}
+            >
+              هندسة التفاصيل.. إتقان النظم.
+            </h1>
+            {/* English static sub-text */}
+            <p
+              className="tracking-[0.28em] text-[#E2E8F0]/80 font-semibold uppercase select-none"
+              style={{ fontSize: "clamp(0.6rem, 2.2vw, 0.72rem)", letterSpacing: "0.28em" }}
+              aria-label="Architecture · Logic · Systems"
+            >
+              ARCHITECTURE
+              <span aria-hidden className="opacity-20 mx-3 font-thin">|</span>
+              LOGIC
+              <span aria-hidden className="opacity-20 mx-3 font-thin">|</span>
+              SYSTEMS
+            </p>
           </div>
 
           {/* Subtitle */}
@@ -253,24 +218,42 @@ export function Home() {
                   </span>
                 </motion.div>
 
-                <div
-                  className="mb-5 text-[3rem] xl:text-[3.8rem] font-black tracking-tighter leading-[1.1]"
-                  aria-label={HEADLINE_LINES.join(" · ")}
-                >
-                  {HEADLINE_LINES.map((line, i) => (
-                    <div key={line} className="flex items-center gap-3 leading-[1.1]">
-                      {i > 0 && (
-                        <span aria-hidden className="text-primary/20 font-thin text-[1.5rem] xl:text-[2rem] leading-none select-none flex-shrink-0">|</span>
-                      )}
-                      <span className={`whitespace-nowrap ${
-                        i === 0 ? "text-foreground" :
-                        i === 1 ? "text-primary" :
-                        "text-foreground/65"
-                      }`}>
-                        {typedLines[i]}{activeLineIdx === i && <Cursor />}
-                      </span>
-                    </div>
-                  ))}
+                {/* Static bilingual headline — desktop */}
+                <div className="mb-6 relative">
+                  {/* Radial glow behind text */}
+                  <div
+                    aria-hidden
+                    className="absolute -inset-10 -z-10 pointer-events-none"
+                    style={{
+                      background:
+                        "radial-gradient(ellipse 90% 70% at 50% 50%, rgba(30,41,59,0.6) 0%, rgba(15,23,42,0.0) 72%)",
+                    }}
+                  />
+                  {/* Arabic headline */}
+                  <h1
+                    className="font-black leading-[1.2] tracking-tight text-[#F8FAFC] mb-4"
+                    style={{
+                      fontSize: "clamp(2rem, 4vw, 3.4rem)",
+                      fontFamily: "var(--font-arabic), sans-serif",
+                      direction: "rtl",
+                      textAlign: "right",
+                      textShadow: "0 2px 32px rgba(34,211,238,0.10)",
+                    }}
+                  >
+                    هندسة التفاصيل.. إتقان النظم.
+                  </h1>
+                  {/* English static sub-text */}
+                  <p
+                    className="text-[#E2E8F0]/70 font-semibold uppercase tracking-[0.3em] select-none"
+                    style={{ fontSize: "clamp(0.58rem, 1vw, 0.7rem)" }}
+                    aria-label="Architecture · Logic · Systems"
+                  >
+                    ARCHITECTURE
+                    <span aria-hidden className="opacity-20 mx-3 font-thin">|</span>
+                    LOGIC
+                    <span aria-hidden className="opacity-20 mx-3 font-thin">|</span>
+                    SYSTEMS
+                  </p>
                 </div>
 
                 <motion.p
