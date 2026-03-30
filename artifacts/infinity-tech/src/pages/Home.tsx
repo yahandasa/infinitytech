@@ -68,30 +68,45 @@ function Cursor() {
 
 /* ─── professional typewriter ────────────────────────────── */
 
-const HEADLINE_WORDS = ["ARCHITECTURE", "LOGIC", "SYSTEMS"] as const;
+/*
+ * Phrases form a coherent engineering narrative — each one describes
+ * a real discipline, flowing from design → firmware → systems → delivery.
+ * All phrases are English-only; the hero section is locked to EN regardless
+ * of the AR/EN language toggle.
+ */
+const TYPING_PHRASES = [
+  "Advanced PCB Design",
+  "Precision Embedded Firmware",
+  "High-Performance Circuit Systems",
+  "From Concept to Production",
+] as const;
+
+/* Longest phrase — used to anchor layout width so nothing shifts */
+const ANCHOR_PHRASE = "High-Performance Circuit Systems";
 
 type Phase = "typing" | "hold" | "deleting" | "gap";
 
-function useProfessionalTypewriter(words: readonly string[]) {
-  const [display,   setDisplay]   = useState("");
-  const [wordIdx,   setWordIdx]   = useState(0);
-  const [phase,     setPhase]     = useState<Phase>("typing");
+function useProfessionalTypewriter(phrases: readonly string[]) {
+  const [display,  setDisplay]  = useState("");
+  const [phraseIdx, setPhraseIdx] = useState(0);
+  const [phase,    setPhase]    = useState<Phase>("typing");
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
 
-    const TYPE_MS   = 105; // per-char base (forward)
-    const DELETE_MS =  48; // per-char base (backspace — snappier)
-    const HOLD_MS   = 1600; // pause after word fully typed
-    const GAP_MS    =  280; // pause after word fully deleted
+    const TYPE_MS   =  82; // per-char base — medium, comfortable to follow
+    const DELETE_MS =  38; // snappier backspace feels natural
+    const HOLD_MS   = 1800; // hold long enough to read the full phrase
+    const GAP_MS    =  260; // brief breath before next phrase starts
 
-    const word = words[wordIdx];
+    const phrase = phrases[phraseIdx];
 
     if (phase === "typing") {
-      if (display.length < word.length) {
-        const jitter = TYPE_MS * (0.75 + Math.random() * 0.5);
+      if (display.length < phrase.length) {
+        // ±30% jitter makes it feel human, not robotic
+        const jitter = TYPE_MS * (0.7 + Math.random() * 0.6);
         timer = setTimeout(
-          () => setDisplay(word.slice(0, display.length + 1)),
+          () => setDisplay(phrase.slice(0, display.length + 1)),
           jitter,
         );
       } else {
@@ -101,24 +116,24 @@ function useProfessionalTypewriter(words: readonly string[]) {
       setPhase("deleting");
     } else if (phase === "deleting") {
       if (display.length > 0) {
-        const jitter = DELETE_MS * (0.75 + Math.random() * 0.5);
+        const jitter = DELETE_MS * (0.7 + Math.random() * 0.6);
         timer = setTimeout(
           () => setDisplay(d => d.slice(0, -1)),
           jitter,
         );
       } else {
         timer = setTimeout(() => {
-          setWordIdx(i => (i + 1) % words.length);
+          setPhraseIdx(i => (i + 1) % phrases.length);
           setPhase("gap");
         }, GAP_MS);
       }
     } else {
-      // gap — short breath before typing next word
-      timer = setTimeout(() => setPhase("typing"), 80);
+      // gap — short pause, then begin typing next phrase
+      timer = setTimeout(() => setPhase("typing"), 120);
     }
 
     return () => clearTimeout(timer);
-  }, [display, phase, wordIdx, words]);
+  }, [display, phase, phraseIdx, phrases]);
 
   return { display, isDeleting: phase === "deleting" };
 }
@@ -146,7 +161,7 @@ export function Home() {
   const { data: projects, isLoading } = useProjects();
   const featuredProjects = projects?.slice(0, 3) || [];
   const { displayed: codeDisplayed, done: codeDone } = useCodeTypewriter(CODE_SNIPPET, 600);
-  const { display: headlineText, isDeleting: headlineDeleting } = useProfessionalTypewriter(HEADLINE_WORDS);
+  const { display: headlineText } = useProfessionalTypewriter(TYPING_PHRASES);
 
   return (
     <div className="w-full flex flex-col min-h-screen">
@@ -198,9 +213,9 @@ export function Home() {
                   "radial-gradient(ellipse 80% 60% at 50% 50%, rgba(30,41,59,0.55) 0%, rgba(15,23,42,0.0) 75%)",
               }}
             />
-            {/* Arabic headline */}
+            {/* Arabic design headline */}
             <h1
-              className="font-black leading-[1.25] tracking-tight text-[#F8FAFC] mb-3"
+              className="font-black leading-[1.25] tracking-tight text-[#F8FAFC] mb-4"
               style={{
                 fontSize: "clamp(1.7rem, 6vw, 2.4rem)",
                 fontFamily: "var(--font-arabic), sans-serif",
@@ -210,28 +225,36 @@ export function Home() {
             >
               هندسة التفاصيل.. إتقان النظم.
             </h1>
-            {/* Animated typewriter — mobile */}
+
+            {/* Animated typing line — mobile */}
             <div
-              className="flex items-center justify-center select-none mt-1"
-              aria-label="Architecture · Logic · Systems"
+              className="flex items-center justify-center select-none"
+              aria-label="Typing: Advanced PCB Design · Precision Embedded Firmware · High-Performance Circuit Systems · From Concept to Production"
             >
-              {/* Width anchor — locked to longest word so layout never shifts */}
+              {/*
+               * Invisible anchor span holds the width of the longest phrase
+               * so the layout never jumps as different-length phrases type in.
+               * The visible text is layered absolutely on top of it.
+               */}
               <span className="relative inline-block">
                 <span
                   aria-hidden
-                  className="invisible whitespace-nowrap font-bold uppercase tracking-[0.22em]"
-                  style={{ fontSize: "clamp(0.72rem, 2.8vw, 0.82rem)" }}
+                  className="invisible whitespace-nowrap font-semibold tracking-wide"
+                  style={{ fontSize: "clamp(0.9rem, 3.2vw, 1.05rem)" }}
                 >
-                  ARCHITECTURE
+                  {ANCHOR_PHRASE}
                 </span>
-                <span className="absolute inset-0 flex items-center justify-center">
+                <span className="absolute inset-0 flex items-center justify-center gap-[3px]">
                   <span
-                    className="whitespace-nowrap font-bold uppercase tracking-[0.22em] text-primary"
-                    style={{ fontSize: "clamp(0.72rem, 2.8vw, 0.82rem)" }}
+                    className="whitespace-nowrap font-semibold tracking-wide text-primary"
+                    style={{
+                      fontSize: "clamp(0.9rem, 3.2vw, 1.05rem)",
+                      textShadow: "0 0 18px rgba(34,211,238,0.40)",
+                    }}
                   >
                     {headlineText}
                   </span>
-                  <span className="flex-shrink-0 ml-[2px]"><Cursor /></span>
+                  <span className="flex-shrink-0"><Cursor /></span>
                 </span>
               </span>
             </div>
@@ -301,41 +324,48 @@ export function Home() {
                         "radial-gradient(ellipse 90% 70% at 50% 50%, rgba(30,41,59,0.6) 0%, rgba(15,23,42,0.0) 72%)",
                     }}
                   />
-                  {/* Arabic headline */}
+                  {/* Arabic design headline */}
                   <h1
-                    className="font-black leading-[1.2] tracking-tight text-[#F8FAFC] mb-4"
+                    className="font-black leading-[1.2] tracking-tight text-[#F8FAFC] mb-5"
                     style={{
                       fontSize: "clamp(2rem, 4vw, 3.4rem)",
                       fontFamily: "var(--font-arabic), sans-serif",
                       direction: "rtl",
-                      textAlign: "center",
                       textShadow: "0 2px 32px rgba(34,211,238,0.10)",
                     }}
                   >
                     هندسة التفاصيل.. إتقان النظم.
                   </h1>
-                  {/* Animated typewriter — desktop */}
+
+                  {/* Animated typing line — desktop */}
                   <div
-                    className="flex items-center select-none mt-1"
-                    aria-label="Architecture · Logic · Systems"
+                    className="flex items-center select-none"
+                    aria-label="Typing: Advanced PCB Design · Precision Embedded Firmware · High-Performance Circuit Systems · From Concept to Production"
                   >
-                    {/* Width anchor — locked to longest word so layout never shifts */}
+                    {/*
+                     * Invisible anchor span holds the width of the longest phrase
+                     * so the layout never shifts as different-length phrases cycle.
+                     * The visible text is positioned absolutely on top of it.
+                     */}
                     <span className="relative inline-block">
                       <span
                         aria-hidden
-                        className="invisible whitespace-nowrap font-bold uppercase tracking-[0.25em]"
-                        style={{ fontSize: "clamp(0.65rem, 1.1vw, 0.8rem)" }}
+                        className="invisible whitespace-nowrap font-semibold tracking-wide"
+                        style={{ fontSize: "clamp(0.95rem, 1.55vw, 1.25rem)" }}
                       >
-                        ARCHITECTURE
+                        {ANCHOR_PHRASE}
                       </span>
-                      <span className="absolute inset-0 flex items-center">
+                      <span className="absolute inset-0 flex items-center gap-[3px]">
                         <span
-                          className="whitespace-nowrap font-bold uppercase tracking-[0.25em] text-primary"
-                          style={{ fontSize: "clamp(0.65rem, 1.1vw, 0.8rem)" }}
+                          className="whitespace-nowrap font-semibold tracking-wide text-primary"
+                          style={{
+                            fontSize: "clamp(0.95rem, 1.55vw, 1.25rem)",
+                            textShadow: "0 0 22px rgba(34,211,238,0.38)",
+                          }}
                         >
                           {headlineText}
                         </span>
-                        <span className="flex-shrink-0 ml-[2px]"><Cursor /></span>
+                        <span className="flex-shrink-0"><Cursor /></span>
                       </span>
                     </span>
                   </div>
