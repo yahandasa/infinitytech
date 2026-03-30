@@ -66,53 +66,61 @@ function Cursor() {
   );
 }
 
-/* ─── headline word typewriter ──────────────────────────── */
+/* ─── professional typewriter ────────────────────────────── */
 
 const HEADLINE_WORDS = ["ARCHITECTURE", "LOGIC", "SYSTEMS"] as const;
 
-function useWordTypewriter(
-  words: readonly string[],
-  charDelay = 120,
-  wordPause = 600,
-) {
-  const [typedLines, setTypedLines] = useState<string[]>(() => words.map(() => ""));
-  const [activeIdx,  setActiveIdx]  = useState(0);
-  const [done,       setDone]       = useState(false);
+type Phase = "typing" | "hold" | "deleting" | "gap";
+
+function useProfessionalTypewriter(words: readonly string[]) {
+  const [display,   setDisplay]   = useState("");
+  const [wordIdx,   setWordIdx]   = useState(0);
+  const [phase,     setPhase]     = useState<Phase>("typing");
 
   useEffect(() => {
-    if (done) return;
-    let cancelled = false;
     let timer: ReturnType<typeof setTimeout>;
 
-    function typeChar(wIdx: number, cIdx: number) {
-      if (cancelled) return;
-      const word = words[wIdx];
-      setTypedLines(prev => {
-        const next = [...prev];
-        next[wIdx] = word.slice(0, cIdx);
-        return next;
-      });
-      if (cIdx < word.length) {
-        const jitter = charDelay * (0.7 + Math.random() * 0.6);
-        timer = setTimeout(() => typeChar(wIdx, cIdx + 1), jitter);
+    const TYPE_MS   = 105; // per-char base (forward)
+    const DELETE_MS =  48; // per-char base (backspace — snappier)
+    const HOLD_MS   = 1600; // pause after word fully typed
+    const GAP_MS    =  280; // pause after word fully deleted
+
+    const word = words[wordIdx];
+
+    if (phase === "typing") {
+      if (display.length < word.length) {
+        const jitter = TYPE_MS * (0.75 + Math.random() * 0.5);
+        timer = setTimeout(
+          () => setDisplay(word.slice(0, display.length + 1)),
+          jitter,
+        );
       } else {
-        const nextWIdx = wIdx + 1;
-        if (nextWIdx < words.length) {
-          timer = setTimeout(() => {
-            if (!cancelled) { setActiveIdx(nextWIdx); typeChar(nextWIdx, 0); }
-          }, wordPause);
-        } else {
-          if (!cancelled) { setDone(true); setActiveIdx(-1); }
-        }
+        timer = setTimeout(() => setPhase("hold"), HOLD_MS);
       }
+    } else if (phase === "hold") {
+      setPhase("deleting");
+    } else if (phase === "deleting") {
+      if (display.length > 0) {
+        const jitter = DELETE_MS * (0.75 + Math.random() * 0.5);
+        timer = setTimeout(
+          () => setDisplay(d => d.slice(0, -1)),
+          jitter,
+        );
+      } else {
+        timer = setTimeout(() => {
+          setWordIdx(i => (i + 1) % words.length);
+          setPhase("gap");
+        }, GAP_MS);
+      }
+    } else {
+      // gap — short breath before typing next word
+      timer = setTimeout(() => setPhase("typing"), 80);
     }
 
-    timer = setTimeout(() => typeChar(0, 0), 500);
-    return () => { cancelled = true; clearTimeout(timer); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    return () => clearTimeout(timer);
+  }, [display, phase, wordIdx, words]);
 
-  return { typedLines, activeIdx };
+  return { display, isDeleting: phase === "deleting" };
 }
 
 /* ─── metrics ────────────────────────────────────────────── */
@@ -138,7 +146,7 @@ export function Home() {
   const { data: projects, isLoading } = useProjects();
   const featuredProjects = projects?.slice(0, 3) || [];
   const { displayed: codeDisplayed, done: codeDone } = useCodeTypewriter(CODE_SNIPPET, 600);
-  const { typedLines: headlineLines, activeIdx: headlineActive } = useWordTypewriter(HEADLINE_WORDS);
+  const { display: headlineText, isDeleting: headlineDeleting } = useProfessionalTypewriter(HEADLINE_WORDS);
 
   return (
     <div className="w-full flex flex-col min-h-screen">
@@ -201,41 +209,30 @@ export function Home() {
             >
               هندسة التفاصيل.. إتقان النظم.
             </h1>
-            {/* Animated word row — mobile */}
+            {/* Animated typewriter — mobile */}
             <div
-              className="flex items-center justify-center gap-0 select-none"
+              className="flex items-center justify-center select-none mt-1"
               aria-label="Architecture · Logic · Systems"
             >
-              {HEADLINE_WORDS.map((word, i) => (
-                <span key={word} className="inline-flex items-center">
-                  {i > 0 && (
-                    <span aria-hidden className="opacity-20 font-thin text-[#E2E8F0] mx-2 flex-shrink-0 text-[0.7rem]">|</span>
-                  )}
-                  {/* Size-reserved container — width locked to "ARCHITECTURE" + cursor */}
-                  <span className="relative inline-block">
-                    {/* Invisible spacer — sets exact container width, same font metrics */}
-                    <span
-                      aria-hidden
-                      className="invisible select-none whitespace-nowrap font-semibold uppercase"
-                      style={{ fontSize: "clamp(0.6rem, 2.2vw, 0.72rem)", letterSpacing: "0.28em" }}
-                    >
-                      ARCHITECTURE&thinsp;
-                    </span>
-                    {/* Actual typed text + cursor — absolutely overlaid */}
-                    <span className="absolute inset-0 flex items-center">
-                      <span
-                        className="whitespace-nowrap font-semibold uppercase text-[#E2E8F0]/80"
-                        style={{ fontSize: "clamp(0.6rem, 2.2vw, 0.72rem)", letterSpacing: "0.28em" }}
-                      >
-                        {headlineLines[i]}
-                      </span>
-                      {headlineActive === i && (
-                        <span className="flex-shrink-0"><Cursor /></span>
-                      )}
-                    </span>
-                  </span>
+              {/* Width anchor — locked to longest word so layout never shifts */}
+              <span className="relative inline-block">
+                <span
+                  aria-hidden
+                  className="invisible whitespace-nowrap font-bold uppercase tracking-[0.22em]"
+                  style={{ fontSize: "clamp(0.72rem, 2.8vw, 0.82rem)" }}
+                >
+                  ARCHITECTURE
                 </span>
-              ))}
+                <span className="absolute inset-0 flex items-center justify-center">
+                  <span
+                    className="whitespace-nowrap font-bold uppercase tracking-[0.22em] text-primary"
+                    style={{ fontSize: "clamp(0.72rem, 2.8vw, 0.82rem)" }}
+                  >
+                    {headlineText}
+                  </span>
+                  <span className="flex-shrink-0 ml-[2px]"><Cursor /></span>
+                </span>
+              </span>
             </div>
           </div>
 
@@ -316,41 +313,30 @@ export function Home() {
                   >
                     هندسة التفاصيل.. إتقان النظم.
                   </h1>
-                  {/* Animated word row — desktop */}
+                  {/* Animated typewriter — desktop */}
                   <div
-                    className="flex items-center gap-0 select-none"
+                    className="flex items-center select-none mt-1"
                     aria-label="Architecture · Logic · Systems"
                   >
-                    {HEADLINE_WORDS.map((word, i) => (
-                      <span key={word} className="inline-flex items-center">
-                        {i > 0 && (
-                          <span aria-hidden className="opacity-20 font-thin text-[#E2E8F0] mx-2 flex-shrink-0 text-[0.65rem]">|</span>
-                        )}
-                        {/* Size-reserved container — width locked to "ARCHITECTURE" + cursor */}
-                        <span className="relative inline-block">
-                          {/* Invisible spacer — same font metrics, anchors container width */}
-                          <span
-                            aria-hidden
-                            className="invisible select-none whitespace-nowrap font-semibold uppercase"
-                            style={{ fontSize: "clamp(0.58rem, 1vw, 0.7rem)", letterSpacing: "0.3em" }}
-                          >
-                            ARCHITECTURE&thinsp;
-                          </span>
-                          {/* Actual typed text + cursor */}
-                          <span className="absolute inset-0 flex items-center">
-                            <span
-                              className="whitespace-nowrap font-semibold uppercase text-[#E2E8F0]/70"
-                              style={{ fontSize: "clamp(0.58rem, 1vw, 0.7rem)", letterSpacing: "0.3em" }}
-                            >
-                              {headlineLines[i]}
-                            </span>
-                            {headlineActive === i && (
-                              <span className="flex-shrink-0"><Cursor /></span>
-                            )}
-                          </span>
-                        </span>
+                    {/* Width anchor — locked to longest word so layout never shifts */}
+                    <span className="relative inline-block">
+                      <span
+                        aria-hidden
+                        className="invisible whitespace-nowrap font-bold uppercase tracking-[0.25em]"
+                        style={{ fontSize: "clamp(0.65rem, 1.1vw, 0.8rem)" }}
+                      >
+                        ARCHITECTURE
                       </span>
-                    ))}
+                      <span className="absolute inset-0 flex items-center">
+                        <span
+                          className="whitespace-nowrap font-bold uppercase tracking-[0.25em] text-primary"
+                          style={{ fontSize: "clamp(0.65rem, 1.1vw, 0.8rem)" }}
+                        >
+                          {headlineText}
+                        </span>
+                        <span className="flex-shrink-0 ml-[2px]"><Cursor /></span>
+                      </span>
+                    </span>
                   </div>
                 </div>
 
