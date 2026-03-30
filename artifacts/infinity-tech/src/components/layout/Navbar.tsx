@@ -36,10 +36,10 @@ export function Navbar() {
     <>
       <header
         className={cn(
-          "fixed top-0 left-0 right-0 z-50 backdrop-blur-lg saturate-150",
-          "bg-[#0F172A]/75 border-b border-white/10",
-          "transition-[box-shadow] duration-300 ease-out",
-          isScrolled && "shadow-[0_4px_24px_rgba(0,0,0,0.35)]",
+          "fixed top-0 left-0 right-0 z-50 backdrop-blur-xl saturate-150",
+          "bg-[#0F172A]/40 border-b border-white/5",
+          "transition-[box-shadow,background-color] duration-500 ease-out",
+          isScrolled && "bg-[#0F172A]/60 shadow-[0_8px_32px_rgba(0,0,0,0.4)]",
         )}
       >
         {/* Subtle top glow line on scroll */}
@@ -104,14 +104,14 @@ export function Navbar() {
                     href={link.path}
                     aria-current={isActive ? "page" : undefined}
                     className={cn(
-                      "group relative px-4 py-2 text-sm font-medium transition-colors duration-200 rounded-lg hover:bg-white/4",
-                      isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                      "group relative px-4 py-2.5 text-[13px] font-medium tracking-wide transition-colors duration-200",
+                      isActive ? "text-white" : "text-slate-400 hover:text-white"
                     )}
                   >
                     {t(link.name, link.nameAr)}
                     <span className={cn(
-                      "absolute bottom-1 left-4 right-4 h-px bg-gradient-to-r from-transparent via-primary to-transparent rounded-full transition-transform duration-250 ease-out",
-                      isActive ? "scale-x-100" : "origin-left scale-x-0 group-hover:scale-x-100"
+                      "absolute bottom-1.5 left-4 right-4 h-px bg-gradient-to-r from-transparent via-primary to-transparent rounded-full transition-transform duration-300 ease-out origin-center",
+                      isActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
                     )} />
                   </Link>
                 );
@@ -121,15 +121,15 @@ export function Navbar() {
             {/* Right — actions */}
             <div className="flex items-center gap-1.5">
 
-              {/* Language Toggle */}
+              {/* Language Toggle — borderless minimalist */}
               <button
                 onClick={toggleLang}
                 aria-label="Switch language"
-                className="hidden md:flex items-center gap-0.5 px-2.5 py-1.5 rounded-lg border border-white/8 hover:border-primary/30 hover:bg-primary/5 transition-all duration-200 text-[11px] font-semibold tracking-[0.08em]"
+                className="hidden md:flex items-center gap-1 px-2 py-1.5 transition-all duration-200 text-[11px] font-semibold tracking-[0.1em]"
               >
-                <span className={lang === "en" ? "text-primary" : "text-muted-foreground/60"}>EN</span>
-                <span className="text-white/15 mx-0.5 select-none">|</span>
-                <span className={lang === "ar" ? "text-primary" : "text-muted-foreground/60"}>AR</span>
+                <span className={lang === "en" ? "text-white" : "text-slate-500 hover:text-slate-300 transition-colors"}>EN</span>
+                <span className="text-white/15 select-none">/</span>
+                <span className={lang === "ar" ? "text-white" : "text-slate-500 hover:text-slate-300 transition-colors"}>AR</span>
               </button>
 
               {/* Mobile toggle */}

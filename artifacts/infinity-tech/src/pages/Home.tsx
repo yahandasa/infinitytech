@@ -185,18 +185,16 @@ export function Home() {
             aria-label={HEADLINE_LINES.join(" · ")}
           >
             {HEADLINE_LINES.map((line, i) => (
-              <div key={line} className="relative flex items-center gap-2">
+              <div key={line} className="flex items-center gap-2 leading-[1.08]">
                 {i > 0 && (
-                  <span aria-hidden className="text-primary/20 font-thin text-[1rem] sm:text-[1.25rem] leading-none select-none">|</span>
+                  <span aria-hidden className="text-primary/20 font-thin text-[1rem] sm:text-[1.25rem] leading-none select-none flex-shrink-0">|</span>
                 )}
-                <span aria-hidden className="invisible">{line}</span>
-                <span className={`absolute inset-0 flex items-center gap-2 ${
+                <span className={`whitespace-nowrap ${
                   i === 0 ? "text-foreground" :
                   i === 1 ? "text-primary" :
                   "text-foreground/65"
                 }`}>
-                  {i > 0 && <span className="text-primary/20 font-thin text-[1rem] sm:text-[1.25rem] leading-none select-none">|</span>}
-                  <span>{typedLines[i]}{activeLineIdx === i && <Cursor />}</span>
+                  {typedLines[i]}{activeLineIdx === i && <Cursor />}
                 </span>
               </div>
             ))}
@@ -260,18 +258,16 @@ export function Home() {
                   aria-label={HEADLINE_LINES.join(" · ")}
                 >
                   {HEADLINE_LINES.map((line, i) => (
-                    <div key={line} className="relative flex items-center gap-3">
+                    <div key={line} className="flex items-center gap-3 leading-[1.1]">
                       {i > 0 && (
-                        <span aria-hidden className="text-primary/20 font-thin text-[1.5rem] xl:text-[2rem] leading-none select-none">|</span>
+                        <span aria-hidden className="text-primary/20 font-thin text-[1.5rem] xl:text-[2rem] leading-none select-none flex-shrink-0">|</span>
                       )}
-                      <span aria-hidden className="invisible">{line}</span>
-                      <span className={`absolute inset-0 flex items-center gap-3 ${
+                      <span className={`whitespace-nowrap ${
                         i === 0 ? "text-foreground" :
                         i === 1 ? "text-primary" :
                         "text-foreground/65"
                       }`}>
-                        {i > 0 && <span className="text-primary/20 font-thin text-[1.5rem] xl:text-[2rem] leading-none select-none">|</span>}
-                        <span>{typedLines[i]}{activeLineIdx === i && <Cursor />}</span>
+                        {typedLines[i]}{activeLineIdx === i && <Cursor />}
                       </span>
                     </div>
                   ))}
