@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
-import { ArrowRight, ChevronRight, CircuitBoard, Cpu, Layers, Mail, Wifi, Zap } from "lucide-react";
+import { ArrowRight, ChevronRight, CircuitBoard, Cpu, Layers, Mail, Zap } from "lucide-react";
 import { useProjects } from "@/hooks/use-projects";
 import { SEO, SITE_JSONLD, PERSON_JSONLD } from "@/components/SEO";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -208,10 +208,10 @@ function StackedHeadline({ align = "left" }: { align?: "left" | "center" }) {
 /* ─── metrics ────────────────────────────────────────────── */
 
 const METRICS = [
-  { icon: Wifi,         label: "EMI Class",  value: "CISPR 32B", accent: false },
-  { icon: Layers,       label: "PCB Stack",  value: "Up to 6L",  accent: false },
-  { icon: Zap,          label: "IMU Rate",   value: "8 kHz",     accent: true  },
-  { icon: CircuitBoard, label: "Sw. Freq",   value: "500 kHz",   accent: false },
+  { icon: Layers,       label: "PCB Layers",   value: "Up to 6",      accent: false },
+  { icon: Cpu,          label: "Processor",    value: "ARM Cortex-M", accent: false },
+  { icon: Zap,          label: "Sensor Speed", value: "8,000 / sec",  accent: true  },
+  { icon: CircuitBoard, label: "Field Ready",  value: "CE Compliant", accent: false },
 ];
 
 /* ─── framer variants ────────────────────────────────────── */
