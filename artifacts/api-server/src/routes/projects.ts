@@ -1,7 +1,8 @@
 import { Router } from "express";
-import { supabaseAdmin } from "../lib/supabase";
+import { db, projects } from "@workspace/db";
+import { eq, desc } from "drizzle-orm";
 import { getUploadSignature } from "../lib/cloudinary";
-import { autoTranslateFields, translate } from "../lib/translate";
+import { autoTranslateFields } from "../lib/translate";
 
 const router = Router();
 
@@ -33,13 +34,8 @@ function sanitizeBody(body: Record<string, unknown>) {
 // GET /api/projects — public
 router.get("/projects", async (_req, res) => {
   try {
-    const { data, error } = await supabaseAdmin
-      .from("projects")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) throw error;
-    res.json({ projects: data });
+    const rows = await db.select().from(projects).orderBy(desc(projects.created_at));
+    res.json({ projects: rows });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -48,14 +44,9 @@ router.get("/projects", async (_req, res) => {
 // GET /api/projects/:id — public
 router.get("/projects/:id", async (req, res) => {
   try {
-    const { data, error } = await supabaseAdmin
-      .from("projects")
-      .select("*")
-      .eq("id", req.params.id)
-      .single();
-
-    if (error || !data) return res.status(404).json({ error: "Project not found" });
-    res.json({ project: data });
+    const [row] = await db.select().from(projects).where(eq(projects.id, req.params.id));
+    if (!row) return res.status(404).json({ error: "Project not found" });
+    res.json({ project: row });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -71,18 +62,13 @@ router.post("/projects", requireAdmin, async (req, res) => {
 
     body = await autoTranslateFields(body);
 
-    const { data, error } = await supabaseAdmin
-      .from("projects")
-      .insert({
-        ...body,
-        tags: body.tags || [],
-        status: body.status || "active",
-      })
-      .select()
-      .single();
+    const [row] = await db.insert(projects).values({
+      ...body,
+      tags: body.tags || [],
+      status: body.status || "active",
+    }).returning();
 
-    if (error) throw error;
-    res.status(201).json({ project: data });
+    res.status(201).json({ project: row });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -98,31 +84,23 @@ router.patch("/projects/:id", requireAdmin, async (req, res) => {
 
     body = await autoTranslateFields(body);
 
-    const { data, error } = await supabaseAdmin
-      .from("projects")
-      .update(body)
-      .eq("id", req.params.id)
-      .select()
-      .single();
+    const [row] = await db.update(projects)
+      .set({ ...body, updated_at: new Date() })
+      .where(eq(projects.id, req.params.id))
+      .returning();
 
-    if (error) throw error;
-    res.json({ project: data });
+    if (!row) return res.status(404).json({ error: "Project not found" });
+    res.json({ project: row });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
 });
 
 // POST /api/projects/:id/translate — admin only
-// Back-fills missing AR fields for an existing project
 router.post("/projects/:id/translate", requireAdmin, async (req, res) => {
   try {
-    const { data: existing, error: fetchErr } = await supabaseAdmin
-      .from("projects")
-      .select("*")
-      .eq("id", req.params.id)
-      .single();
-
-    if (fetchErr || !existing) return res.status(404).json({ error: "Project not found" });
+    const [existing] = await db.select().from(projects).where(eq(projects.id, req.params.id));
+    if (!existing) return res.status(404).json({ error: "Project not found" });
 
     const fields = {
       title_en: existing.title_en,
@@ -139,15 +117,12 @@ router.post("/projects/:id/translate", requireAdmin, async (req, res) => {
 
     const translated = await autoTranslateFields(fields);
 
-    const { data, error } = await supabaseAdmin
-      .from("projects")
-      .update(translated)
-      .eq("id", req.params.id)
-      .select()
-      .single();
+    const [row] = await db.update(projects)
+      .set({ ...translated, updated_at: new Date() })
+      .where(eq(projects.id, req.params.id))
+      .returning();
 
-    if (error) throw error;
-    res.json({ project: data, translated: true });
+    res.json({ project: row, translated: true });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -156,12 +131,8 @@ router.post("/projects/:id/translate", requireAdmin, async (req, res) => {
 // DELETE /api/projects/:id — admin only
 router.delete("/projects/:id", requireAdmin, async (req, res) => {
   try {
-    const { error } = await supabaseAdmin
-      .from("projects")
-      .delete()
-      .eq("id", req.params.id);
-
-    if (error) throw error;
+    const result = await db.delete(projects).where(eq(projects.id, req.params.id)).returning();
+    if (result.length === 0) return res.status(404).json({ error: "Project not found" });
     res.json({ success: true });
   } catch (err: any) {
     res.status(500).json({ error: err.message });

@@ -38,7 +38,11 @@ artifacts-monorepo/
 └── package.json
 ```
 
-## Supabase Setup
+## Database
+
+> **Supabase has been disabled.** All data (projects, contact messages) is now stored in the Replit-managed PostgreSQL database via Drizzle ORM. The `@workspace/db` package contains the full schema. Run `pnpm --filter @workspace/db run push` to apply schema changes.
+
+## Supabase Setup (DISABLED)
 
 - **Project ref**: `kbqhoyipoxmyhtbuhlkd`
 - **Host**: `db.kbqhoyipoxmyhtbuhlkd.supabase.co`

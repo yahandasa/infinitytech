@@ -1,6 +1,5 @@
 import app from "./app";
 import { logger } from "./lib/logger";
-import { ensureProjectsTable } from "./lib/setup-supabase-schema";
 
 const rawPort = process.env["PORT"];
 
@@ -15,9 +14,6 @@ const port = Number(rawPort);
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
-
-// Bootstrap Supabase schema on startup (no-op if table already exists)
-ensureProjectsTable().catch(e => logger.warn({ err: e }, "Schema bootstrap warning"));
 
 app.listen(port, (err) => {
   if (err) {

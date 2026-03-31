@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { supabaseAdmin } from "../lib/supabase";
+import { db, contactMessages } from "@workspace/db";
 import { z } from "zod";
 
 const router = Router();
@@ -17,17 +17,12 @@ router.post("/contact", async (req, res) => {
     return res.status(400).json({ error: "Invalid input", details: parsed.error.issues });
   }
 
-  const { name, email, subject, message } = parsed.data;
-
-  const { error } = await supabaseAdmin
-    .from("contact_messages")
-    .insert({ name, email, subject, message });
-
-  if (error) {
-    return res.status(500).json({ error: error.message });
+  try {
+    await db.insert(contactMessages).values(parsed.data);
+    return res.json({ ok: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
   }
-
-  return res.json({ ok: true });
 });
 
 export default router;
