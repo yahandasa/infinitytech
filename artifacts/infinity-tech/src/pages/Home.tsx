@@ -66,75 +66,120 @@ function Cursor() {
   );
 }
 
-/* ─── professional typewriter ────────────────────────────── */
+/* ─── stacked typewriter ─────────────────────────────────── */
 
 /*
- * Phrases form a coherent engineering narrative — each one describes
- * a real discipline, flowing from design → firmware → systems → delivery.
- * All phrases are English-only; the hero section is locked to EN regardless
- * of the AR/EN language toggle.
+ * Three words typed sequentially, stacked vertically.
+ * Design → Precision → Performance — a logical engineering progression.
+ *
+ * Rules:
+ *   • Types each word letter-by-letter, then pauses before the next
+ *   • STOPS after all three words — no loop, no delete
+ *   • Cursor shows only on the active line; disappears when done
+ *   • All three line slots are pre-allocated so layout never shifts
  */
-const TYPING_PHRASES = [
-  "Advanced PCB Design",
-  "Precision Embedded Firmware",
-  "From Concept to Production",
-] as const;
+const STACK_WORDS = ["Design", "Precision", "Performance"] as const;
+type StackWord = (typeof STACK_WORDS)[number];
 
-/* Longest phrase — used to anchor layout width so nothing shifts */
-const ANCHOR_PHRASE = "Precision Embedded Firmware";
+function useStackedTypewriter() {
+  const CHAR_DELAY = 90;  // ms per character (±30% jitter)
+  const WORD_PAUSE = 430; // ms pause between words
 
-type Phase = "typing" | "hold" | "deleting" | "gap";
-
-function useProfessionalTypewriter(phrases: readonly string[]) {
-  const [display,  setDisplay]  = useState("");
-  const [phraseIdx, setPhraseIdx] = useState(0);
-  const [phase,    setPhase]    = useState<Phase>("typing");
+  const [lines, setLines] = useState<Record<StackWord, string>>({
+    Design: "", Precision: "", Performance: "",
+  });
+  const [active, setActive] = useState(0); // index into STACK_WORDS
+  const [done,   setDone]   = useState(false);
+  const charRef  = useRef(0); // character index within the active word
 
   useEffect(() => {
+    if (done) return;
+
+    charRef.current = 0;
+    const word = STACK_WORDS[active];
+
     let timer: ReturnType<typeof setTimeout>;
 
-    const TYPE_MS   =  82; // per-char base — medium, comfortable to follow
-    const DELETE_MS =  38; // snappier backspace feels natural
-    const HOLD_MS   = 1800; // hold long enough to read the full phrase
-    const GAP_MS    =  260; // brief breath before next phrase starts
-
-    const phrase = phrases[phraseIdx];
-
-    if (phase === "typing") {
-      if (display.length < phrase.length) {
-        // ±30% jitter makes it feel human, not robotic
-        const jitter = TYPE_MS * (0.7 + Math.random() * 0.6);
-        timer = setTimeout(
-          () => setDisplay(phrase.slice(0, display.length + 1)),
-          jitter,
-        );
-      } else {
-        timer = setTimeout(() => setPhase("hold"), HOLD_MS);
+    function typeNext() {
+      const ci = charRef.current;
+      if (ci >= word.length) {
+        // Word fully typed — pause then advance
+        if (active < STACK_WORDS.length - 1) {
+          timer = setTimeout(() => setActive(a => a + 1), WORD_PAUSE);
+        } else {
+          setDone(true);
+        }
+        return;
       }
-    } else if (phase === "hold") {
-      setPhase("deleting");
-    } else if (phase === "deleting") {
-      if (display.length > 0) {
-        const jitter = DELETE_MS * (0.7 + Math.random() * 0.6);
-        timer = setTimeout(
-          () => setDisplay(d => d.slice(0, -1)),
-          jitter,
-        );
-      } else {
-        timer = setTimeout(() => {
-          setPhraseIdx(i => (i + 1) % phrases.length);
-          setPhase("gap");
-        }, GAP_MS);
-      }
-    } else {
-      // gap — short pause, then begin typing next phrase
-      timer = setTimeout(() => setPhase("typing"), 120);
+      charRef.current = ci + 1;
+      setLines(prev => ({ ...prev, [word]: word.slice(0, ci + 1) }));
+      const jitter = CHAR_DELAY * (0.7 + Math.random() * 0.6);
+      timer = setTimeout(typeNext, jitter);
     }
 
+    // First word gets a short initial delay for page-load polish
+    timer = setTimeout(typeNext, active === 0 ? 380 : 0);
     return () => clearTimeout(timer);
-  }, [display, phase, phraseIdx, phrases]);
+  }, [active, done]);
 
-  return { display, isDeleting: phase === "deleting" };
+  return { lines, active, done };
+}
+
+/*
+ * Shared headline component — used by both mobile and desktop layouts.
+ * Each word line is pre-allocated via an invisible full-word anchor span,
+ * so the container dimensions never change during typing.
+ */
+function StackedHeadline({ align = "left" }: { align?: "left" | "center" }) {
+  const { lines, active, done } = useStackedTypewriter();
+
+  /* Font size differs only between mobile (passed via align="center") and desktop */
+  const fs = align === "center"
+    ? "clamp(2.2rem, 9vw, 3.2rem)"
+    : "clamp(2.8rem, 4.6vw, 4.4rem)";
+
+  return (
+    <div style={{ display: "inline-block", textAlign: align }}>
+      {STACK_WORDS.map((word, i) => {
+        const display  = lines[word];
+        const isActive = active === i && !done;
+        /* Last word ("Performance") gets the primary cyan + glow */
+        const isAccent = i === STACK_WORDS.length - 1;
+
+        return (
+          <div key={word} className="relative" style={{ lineHeight: "1.12", marginBottom: "0.04em" }}>
+            {/*
+             * Invisible anchor — always occupies the full word's width and height.
+             * This pre-allocates the exact space before a single character is typed,
+             * preventing any layout shift throughout the animation.
+             */}
+            <span
+              aria-hidden
+              className="invisible font-black tracking-tighter block"
+              style={{ fontSize: fs }}
+            >
+              {word}
+            </span>
+
+            {/* Typed overlay — absolutely positioned on top of the anchor */}
+            <span
+              className="absolute inset-0 flex items-center font-black tracking-tighter"
+              style={{
+                fontSize: fs,
+                color: isAccent ? "hsl(var(--primary))" : "hsl(var(--foreground))",
+                textShadow: isAccent && display.length > 0
+                  ? "0 0 40px rgba(34,211,238,0.45)"
+                  : undefined,
+              }}
+            >
+              {display}
+              {isActive && <Cursor />}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 /* ─── metrics ────────────────────────────────────────────── */
@@ -160,7 +205,6 @@ export function Home() {
   const { data: projects, isLoading } = useProjects();
   const featuredProjects = projects?.slice(0, 3) || [];
   const { displayed: codeDisplayed, done: codeDone } = useCodeTypewriter(CODE_SNIPPET, 600);
-  const { display: headlineText } = useProfessionalTypewriter(TYPING_PHRASES);
 
   return (
     <div className="w-full flex flex-col min-h-screen">
@@ -201,41 +245,12 @@ export function Home() {
             </span>
           </motion.div>
 
-          {/* Typing headline — mobile */}
+          {/* Stacked headline — mobile */}
           <h1
-            className="mb-6 text-center select-none relative"
-            aria-label="Advanced PCB Design · Precision Embedded Firmware · High-Performance Circuit Systems · From Concept to Production"
+            className="mb-6 text-center select-none"
+            aria-label="Design · Precision · Performance"
           >
-            {/*
-             * Invisible anchor holds the width of the longest phrase
-             * so the container never resizes as phrases cycle — zero layout shift.
-             */}
-            <span className="relative inline-block">
-              <span
-                aria-hidden
-                className="invisible whitespace-nowrap font-black tracking-tight"
-                style={{ fontSize: "clamp(2.1rem, 9vw, 3rem)" }}
-              >
-                {ANCHOR_PHRASE}
-              </span>
-              <span className="absolute inset-0 flex items-center justify-center gap-[3px]">
-                <span
-                  className="whitespace-nowrap font-black tracking-tight text-foreground"
-                  style={{
-                    fontSize: "clamp(2.1rem, 9vw, 3rem)",
-                  }}
-                >
-                  {headlineText.split(" ").map((word, wi, arr) => (
-                    <span key={wi}>
-                      {wi === arr.length - 1
-                        ? <span className="text-primary" style={{ textShadow: "0 0 28px rgba(34,211,238,0.45)" }}>{word}</span>
-                        : <>{word} </>}
-                    </span>
-                  ))}
-                </span>
-                <span className="flex-shrink-0"><Cursor /></span>
-              </span>
-            </span>
+            <StackedHeadline align="center" />
           </h1>
 
           {/* Subtitle */}
@@ -291,39 +306,12 @@ export function Home() {
                   </span>
                 </motion.div>
 
-                {/* Typing headline — desktop */}
+                {/* Stacked headline — desktop */}
                 <h1
-                  className="mb-6 select-none relative"
-                  aria-label="Advanced PCB Design · Precision Embedded Firmware · High-Performance Circuit Systems · From Concept to Production"
+                  className="mb-6 select-none"
+                  aria-label="Design · Precision · Performance"
                 >
-                  {/*
-                   * Invisible anchor holds the width of the longest phrase
-                   * so the container never resizes as phrases cycle — zero layout shift.
-                   */}
-                  <span className="relative inline-block">
-                    <span
-                      aria-hidden
-                      className="invisible whitespace-nowrap font-black tracking-tighter leading-tight"
-                      style={{ fontSize: "clamp(2.8rem, 4.8vw, 4.5rem)" }}
-                    >
-                      {ANCHOR_PHRASE}
-                    </span>
-                    <span className="absolute inset-0 flex items-center gap-[4px]">
-                      <span
-                        className="whitespace-nowrap font-black tracking-tighter leading-tight text-foreground"
-                        style={{ fontSize: "clamp(2.8rem, 4.8vw, 4.5rem)" }}
-                      >
-                        {headlineText.split(" ").map((word, wi, arr) => (
-                          <span key={wi}>
-                            {wi === arr.length - 1
-                              ? <span className="text-primary" style={{ textShadow: "0 0 36px rgba(34,211,238,0.5)" }}>{word}</span>
-                              : <>{word} </>}
-                          </span>
-                        ))}
-                      </span>
-                      <span className="flex-shrink-0"><Cursor /></span>
-                    </span>
-                  </span>
+                  <StackedHeadline align="left" />
                 </h1>
 
                 <motion.p
