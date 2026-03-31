@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, projects } from "@workspace/db";
+import { db, projects, projectStats } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 import { getUploadSignature } from "../lib/cloudinary";
 import { autoTranslateFields } from "../lib/translate";
@@ -41,12 +41,24 @@ router.get("/projects", async (_req, res) => {
   }
 });
 
-// GET /api/projects/:id — public
+// GET /api/projects/:id — public; includes live view/download counts
 router.get("/projects/:id", async (req, res) => {
   try {
-    const [row] = await db.select().from(projects).where(eq(projects.id, req.params.id));
+    const [[row], [stats]] = await Promise.all([
+      db.select().from(projects).where(eq(projects.id, req.params.id)),
+      db.select().from(projectStats).where(eq(projectStats.projectId, req.params.id)),
+    ]);
     if (!row) return res.status(404).json({ error: "Project not found" });
-    res.json({ project: row });
+
+    res.json({
+      project: {
+        ...row,
+        analytics: {
+          views:     stats?.viewsCount     ?? 0,
+          downloads: stats?.downloadsCount ?? 0,
+        },
+      },
+    });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -134,6 +146,47 @@ router.delete("/projects/:id", requireAdmin, async (req, res) => {
     const result = await db.delete(projects).where(eq(projects.id, req.params.id)).returning();
     if (result.length === 0) return res.status(404).json({ error: "Project not found" });
     res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/projects/:id/updates — public; returns the updates log array
+router.get("/projects/:id/updates", async (req, res) => {
+  try {
+    const [row] = await db.select({ updates: projects.updates })
+      .from(projects)
+      .where(eq(projects.id, req.params.id));
+    if (!row) return res.status(404).json({ error: "Project not found" });
+    res.json({ updates: (row.updates as any[]) || [] });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/projects/:id/updates — admin only; append a new update log entry
+router.post("/projects/:id/updates", requireAdmin, async (req, res) => {
+  try {
+    const { message } = req.body as { message?: string };
+    if (!message?.trim()) {
+      return res.status(400).json({ error: "message is required" });
+    }
+
+    const [existing] = await db.select({ updates: projects.updates })
+      .from(projects)
+      .where(eq(projects.id, req.params.id));
+    if (!existing) return res.status(404).json({ error: "Project not found" });
+
+    const newEntry = { message: message.trim(), date: new Date().toISOString() };
+    const currentUpdates = (existing.updates as any[]) || [];
+    const updatedList = [newEntry, ...currentUpdates];
+
+    const [row] = await db.update(projects)
+      .set({ updates: updatedList, updated_at: new Date() })
+      .where(eq(projects.id, req.params.id))
+      .returning();
+
+    res.status(201).json({ update: newEntry, updates: row.updates });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

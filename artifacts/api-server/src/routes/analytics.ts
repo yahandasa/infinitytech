@@ -2,8 +2,42 @@ import { Router } from "express";
 import { db, analyticsEvents, projectStats } from "@workspace/db";
 import { eq, sql, desc, and, gte } from "drizzle-orm";
 
+/* ─── helpers ─────────────────────────────────────────────── */
+
+async function upsertStat(
+  projectId: string,
+  eventType: "project_view" | "download",
+  durationMs?: number,
+) {
+  await db.insert(analyticsEvents).values({ eventType, projectId, lang: "en" });
+
+  await db.insert(projectStats)
+    .values({
+      projectId,
+      viewsCount:     eventType === "project_view" ? 1 : 0,
+      downloadsCount: eventType === "download"      ? 1 : 0,
+      avgTimeMs:      durationMs || 0,
+    })
+    .onConflictDoUpdate({
+      target: projectStats.projectId,
+      set: {
+        viewsCount: eventType === "project_view"
+          ? sql`${projectStats.viewsCount} + 1`
+          : projectStats.viewsCount,
+        downloadsCount: eventType === "download"
+          ? sql`${projectStats.downloadsCount} + 1`
+          : projectStats.downloadsCount,
+        avgTimeMs: durationMs
+          ? sql`(${projectStats.avgTimeMs} + ${durationMs}) / 2`
+          : projectStats.avgTimeMs,
+        updatedAt: sql`NOW()`,
+      },
+    });
+}
+
 const router = Router();
 
+/* POST /api/analytics/event — full event payload */
 router.post("/analytics/event", async (req, res) => {
   try {
     const { eventType, projectId, path, lang, referrer, sessionId, durationMs } = req.body as {
@@ -18,31 +52,42 @@ router.post("/analytics/event", async (req, res) => {
     });
 
     if (projectId && (eventType === "project_view" || eventType === "download")) {
-      await db.insert(projectStats)
-        .values({
-          projectId,
-          viewsCount:     eventType === "project_view" ? 1 : 0,
-          downloadsCount: eventType === "download" ? 1 : 0,
-          avgTimeMs:      durationMs || 0,
-        })
-        .onConflictDoUpdate({
-          target: projectStats.projectId,
-          set: {
-            viewsCount:     eventType === "project_view"
-              ? sql`${projectStats.viewsCount} + 1`
-              : projectStats.viewsCount,
-            downloadsCount: eventType === "download"
-              ? sql`${projectStats.downloadsCount} + 1`
-              : projectStats.downloadsCount,
-            avgTimeMs: durationMs
-              ? sql`(${projectStats.avgTimeMs} + ${durationMs}) / 2`
-              : projectStats.avgTimeMs,
-            updatedAt: sql`NOW()`,
-          },
-        });
+      await upsertStat(projectId, eventType, durationMs);
     }
 
     return res.json({ ok: true });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Unknown error";
+    return res.status(500).json({ error: msg });
+  }
+});
+
+/* POST /api/track/view — shorthand: increment view count for a project */
+router.post("/track/view", async (req, res) => {
+  try {
+    const { projectId } = req.body as { projectId?: string };
+    if (!projectId) return res.status(400).json({ error: "projectId is required" });
+
+    await upsertStat(projectId, "project_view");
+
+    const [stats] = await db.select().from(projectStats).where(eq(projectStats.projectId, projectId));
+    return res.json({ ok: true, views: stats?.viewsCount ?? 1 });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Unknown error";
+    return res.status(500).json({ error: msg });
+  }
+});
+
+/* POST /api/track/download — shorthand: increment download count for a project */
+router.post("/track/download", async (req, res) => {
+  try {
+    const { projectId } = req.body as { projectId?: string };
+    if (!projectId) return res.status(400).json({ error: "projectId is required" });
+
+    await upsertStat(projectId, "download");
+
+    const [stats] = await db.select().from(projectStats).where(eq(projectStats.projectId, projectId));
+    return res.json({ ok: true, downloads: stats?.downloadsCount ?? 1 });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown error";
     return res.status(500).json({ error: msg });
