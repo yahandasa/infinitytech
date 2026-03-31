@@ -52,16 +52,17 @@ function useCodeTypewriter(text: string, startDelay = 900) {
 
 /* ─── blinking cursor ────────────────────────────────────── */
 
-function Cursor() {
+function Cursor({ slow = false }: { slow?: boolean }) {
   const [on, setOn] = useState(true);
+  const interval = slow ? 850 : 530;
   useEffect(() => {
-    const t = setInterval(() => setOn(v => !v), 530);
+    const t = setInterval(() => setOn(v => !v), interval);
     return () => clearInterval(t);
-  }, []);
+  }, [interval]);
   return (
     <span
       className="inline-block w-[2px] h-[0.82em] bg-primary align-middle ml-[2px] rounded-[1px]"
-      style={{ opacity: on ? 1 : 0, transition: "opacity 0.08s" }}
+      style={{ opacity: on ? 1 : 0, transition: slow ? "opacity 0.18s" : "opacity 0.08s" }}
     />
   );
 }
@@ -82,8 +83,10 @@ const STACK_WORDS = ["Design", "Precision", "Performance"] as const;
 type StackWord = (typeof STACK_WORDS)[number];
 
 function useStackedTypewriter() {
-  const CHAR_DELAY = 90;  // ms per character (±30% jitter)
-  const WORD_PAUSE = 430; // ms pause between words
+  // Target: 80–120 ms/char, ±15 ms natural variation
+  const CHAR_BASE  = 95;  // ms — midpoint of 80–120 ms range
+  const CHAR_VAR   = 15;  // ±ms jitter per character
+  const WORD_PAUSE = 650; // ms between words (500–800 ms feel)
 
   const [lines, setLines] = useState<Record<StackWord, string>>({
     Design: "", Precision: "", Performance: "",
@@ -103,7 +106,7 @@ function useStackedTypewriter() {
     function typeNext() {
       const ci = charRef.current;
       if (ci >= word.length) {
-        // Word fully typed — pause then advance
+        // Word fully typed — natural pause then advance
         if (active < STACK_WORDS.length - 1) {
           timer = setTimeout(() => setActive(a => a + 1), WORD_PAUSE);
         } else {
@@ -113,12 +116,21 @@ function useStackedTypewriter() {
       }
       charRef.current = ci + 1;
       setLines(prev => ({ ...prev, [word]: word.slice(0, ci + 1) }));
-      const jitter = CHAR_DELAY * (0.7 + Math.random() * 0.6);
-      timer = setTimeout(typeNext, jitter);
+
+      // Base delay with gentle ±15 ms variation
+      let delay = CHAR_BASE + (Math.random() * CHAR_VAR * 2 - CHAR_VAR);
+
+      // Slightly slower at the very start of each word — like gathering thought
+      if (ci === 0) delay += 75;
+
+      // Subtle hesitation just before the final character of each word
+      if (ci === word.length - 2) delay += 35;
+
+      timer = setTimeout(typeNext, delay);
     }
 
-    // First word gets a short initial delay for page-load polish
-    timer = setTimeout(typeNext, active === 0 ? 380 : 0);
+    // First word waits for page to settle; subsequent words start immediately
+    timer = setTimeout(typeNext, active === 0 ? 500 : 0);
     return () => clearTimeout(timer);
   }, [active, done]);
 
@@ -174,6 +186,16 @@ function StackedHeadline({ align = "left" }: { align?: "left" | "center" }) {
             >
               {display}
               {isActive && <Cursor />}
+              {done && i === STACK_WORDS.length - 1 && (
+                <motion.span
+                  initial={{ opacity: 1 }}
+                  animate={{ opacity: 0 }}
+                  transition={{ delay: 2.5, duration: 2, ease: "easeOut" }}
+                  style={{ display: "inline" }}
+                >
+                  <Cursor slow />
+                </motion.span>
+              )}
             </span>
           </div>
         );
