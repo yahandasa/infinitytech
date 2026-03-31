@@ -174,6 +174,49 @@
   .font-display { font-family: var(--font-display); }
   .font-arabic  { font-family: var(--font-arabic); }
 
+  /*
+   * Bilingual text-direction utilities
+   * ─────────────────────────────────
+   * Apply .ar-text to any element whose content is Arabic.
+   * Apply .en-text to any element whose content is English.
+   * These ONLY change text flow and font — they never touch layout direction.
+   *
+   * Usage:
+   *   <p className={`text-muted-foreground ${textClass}`}>
+   *     {t("English sentence.", "جملة عربية.")}
+   *   </p>
+   */
+  .ar-text {
+    font-family: 'Cairo', 'IBM Plex Sans Arabic', var(--font-arabic), sans-serif;
+    direction: rtl;
+    text-align: right;
+    letter-spacing: 0 !important;   /* Arabic glyphs break with Latin tracking */
+    line-height: 1.82;
+    unicode-bidi: embed;            /* isolate bidi within the element          */
+  }
+
+  .en-text {
+    font-family: var(--font-sans);
+    direction: ltr;
+    text-align: left;
+    unicode-bidi: embed;
+  }
+
+  /* Headings that receive .ar-text must use the Arabic typeface, not Space Grotesk */
+  h1.ar-text, h2.ar-text, h3.ar-text,
+  h4.ar-text, h5.ar-text, h6.ar-text {
+    font-family: 'Cairo', 'IBM Plex Sans Arabic', var(--font-arabic), sans-serif;
+    letter-spacing: 0;
+    line-height: 1.5;
+  }
+
+  /* Small eyebrow / label text — suppress uppercase spacing for Arabic glyphs */
+  .ar-text.uppercase,
+  .ar-text.tracking-widest,
+  .ar-text[class*="tracking-"] {
+    letter-spacing: 0 !important;
+  }
+
   /* ── Glassmorphism ── */
   .glass {
     background:   var(--glass-bg);

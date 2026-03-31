@@ -23,6 +23,16 @@ interface LanguageContextType {
    * t(<>Projects <span className="text-primary">&</span> Research</>, <>المشاريع</>)
    */
   t: <T extends ReactNode>(en: T, ar: T) => T;
+  /**
+   * CSS class to apply to translated text containers.
+   * Adds direction, text-align, and the correct typeface for the active language.
+   *
+   * "ar-text" → direction:rtl, text-align:right, Cairo font
+   * "en-text" → direction:ltr, text-align:left,  Inter font
+   *
+   * Usage:  <p className={`text-muted-foreground ${textClass}`}>{t(en, ar)}</p>
+   */
+  textClass: "ar-text" | "en-text";
 }
 
 const LanguageContext = createContext<LanguageContextType>({
@@ -31,6 +41,7 @@ const LanguageContext = createContext<LanguageContextType>({
   isRTL: true,
   isTransitioning: false,
   t: (_en, ar) => ar,
+  textClass: "ar-text",
 });
 
 const TRANSITION_MS = 160;
@@ -85,12 +96,14 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     [lang],
   );
 
+  const textClass = lang === "ar" ? "ar-text" : "en-text";
+
   function t<T extends ReactNode>(en: T, ar: T): T {
     return lang === "ar" ? ar : en;
   }
 
   return (
-    <LanguageContext.Provider value={{ lang, setLang, isRTL, isTransitioning, t }}>
+    <LanguageContext.Provider value={{ lang, setLang, isRTL, isTransitioning, t, textClass }}>
       {children}
     </LanguageContext.Provider>
   );
