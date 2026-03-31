@@ -4,6 +4,7 @@ import { Link } from "wouter";
 import { ArrowRight, ChevronRight, CircuitBoard, Cpu, Layers, Mail, Microchip, Wifi, Zap } from "lucide-react";
 import { useProjects } from "@/hooks/use-projects";
 import { SEO, SITE_JSONLD, PERSON_JSONLD } from "@/components/SEO";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 /* ─── constants ─────────────────────────────────────────── */
 
@@ -227,6 +228,7 @@ export function Home() {
   const { data: projects, isLoading } = useProjects();
   const featuredProjects = projects?.slice(0, 3) || [];
   const { displayed: codeDisplayed, done: codeDone } = useCodeTypewriter(CODE_SNIPPET, 600);
+  const { t } = useLanguage();
 
   return (
     <div className="w-full flex flex-col min-h-screen">
@@ -280,13 +282,26 @@ export function Home() {
             {...fadeUp(0.38)}
             className="text-sm sm:text-[15px] text-muted-foreground leading-[1.75] mb-7 max-w-lg"
           >
-            Hardware engineer specializing in{" "}
-            <span className="text-foreground/90 font-medium">multi-layer PCB design</span>,{" "}
-            <span className="text-foreground/90 font-medium">bare-metal firmware</span>, and
-            production-ready{" "}
-            <span className="text-foreground/90 font-medium">embedded systems</span>{" "}
-            <span className="text-primary/80">—</span>{" "}
-            from schematic to silicon.
+            {t(
+              <>
+                Hardware engineer specializing in{" "}
+                <span className="text-foreground/90 font-medium">multi-layer PCB design</span>,{" "}
+                <span className="text-foreground/90 font-medium">bare-metal firmware</span>, and
+                production-ready{" "}
+                <span className="text-foreground/90 font-medium">embedded systems</span>{" "}
+                <span className="text-primary/80">—</span>{" "}
+                from schematic to silicon.
+              </>,
+              <>
+                مهندس إلكترونيات متخصص في{" "}
+                <span className="text-foreground/90 font-medium">تصميم لوحات PCB متعددة الطبقات</span>،{" "}
+                <span className="text-foreground/90 font-medium">البرمجة المدمجة على المستوى المعدني</span>،{" "}
+                وأنظمة{" "}
+                <span className="text-foreground/90 font-medium">مدمجة جاهزة للإنتاج</span>{" "}
+                <span className="text-primary/80">—</span>{" "}
+                من المخطط الكهربائي إلى الرقاقة الإلكترونية.
+              </>
+            )}
           </motion.p>
 
           {/* CTAs */}
@@ -298,14 +313,14 @@ export function Home() {
               href="/projects"
               className="px-7 py-3.5 bg-primary text-primary-foreground font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors duration-200 text-[15px]"
             >
-              View Projects <ArrowRight className="w-4 h-4" />
+              {t("View Projects", "استعرض المشاريع")} <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
               href="/contact"
               className="inline-flex items-center gap-2 px-7 py-3.5 bg-card border border-border text-foreground font-semibold rounded-xl hover:bg-white/5 transition-colors duration-200 text-center text-[15px]"
             >
               <Mail className="w-4 h-4 text-primary" />
-              Contact
+              {t("Contact", "تواصل معي")}
             </Link>
           </motion.div>
 
@@ -340,13 +355,26 @@ export function Home() {
                   {...fadeUp(0.38)}
                   className="text-[15px] md:text-base text-muted-foreground leading-[1.75] mb-6 max-w-xl"
                 >
-                  Hardware engineer specializing in{" "}
-                  <span className="text-foreground/90 font-medium">multi-layer PCB design</span>,{" "}
-                  <span className="text-foreground/90 font-medium">bare-metal firmware</span>, and
-                  production-ready{" "}
-                  <span className="text-foreground/90 font-medium">embedded systems</span>{" "}
-                  <span className="text-primary/80">—</span>{" "}
-                  from schematic to silicon.
+                  {t(
+                    <>
+                      Hardware engineer specializing in{" "}
+                      <span className="text-foreground/90 font-medium">multi-layer PCB design</span>,{" "}
+                      <span className="text-foreground/90 font-medium">bare-metal firmware</span>, and
+                      production-ready{" "}
+                      <span className="text-foreground/90 font-medium">embedded systems</span>{" "}
+                      <span className="text-primary/80">—</span>{" "}
+                      from schematic to silicon.
+                    </>,
+                    <>
+                      مهندس إلكترونيات متخصص في{" "}
+                      <span className="text-foreground/90 font-medium">تصميم لوحات PCB متعددة الطبقات</span>،{" "}
+                      <span className="text-foreground/90 font-medium">البرمجة المدمجة على المستوى المعدني</span>،{" "}
+                      وأنظمة{" "}
+                      <span className="text-foreground/90 font-medium">مدمجة جاهزة للإنتاج</span>{" "}
+                      <span className="text-primary/80">—</span>{" "}
+                      من المخطط الكهربائي إلى الرقاقة الإلكترونية.
+                    </>
+                  )}
                 </motion.p>
 
                 <motion.div
@@ -357,14 +385,14 @@ export function Home() {
                     href="/projects"
                     className="px-7 py-3 bg-primary text-primary-foreground font-semibold rounded-xl flex items-center gap-2 hover:bg-primary/90 transition-colors duration-200 text-[15px]"
                   >
-                    View Projects <ArrowRight className="w-4 h-4" />
+                    {t("View Projects", "استعرض المشاريع")} <ArrowRight className="w-4 h-4" />
                   </Link>
                   <Link
                     href="/contact"
                     className="inline-flex items-center gap-2 px-7 py-3 bg-card border border-border text-foreground font-semibold rounded-xl hover:bg-white/5 transition-colors duration-200 text-[15px]"
                   >
                     <Mail className="w-4 h-4 text-primary" />
-                    Contact
+                    {t("Contact", "تواصل معي")}
                   </Link>
                 </motion.div>
               </div>
@@ -475,8 +503,12 @@ export function Home() {
       <section className="py-24 relative z-10 bg-background/50 cv-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-12">
-            <p className="text-[11px] font-semibold text-primary uppercase tracking-[0.2em] mb-3">Core Disciplines</p>
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tighter text-foreground">What I Build</h2>
+            <p className="text-[11px] font-semibold text-primary uppercase tracking-[0.2em] mb-3">
+              {t("Core Disciplines", "التخصصات الأساسية")}
+            </p>
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tighter text-foreground">
+              {t("What I Build", "ما أبنيه")}
+            </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
@@ -554,12 +586,21 @@ export function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-12">
             <div>
-              <p className="text-[11px] font-semibold text-primary uppercase tracking-[0.2em] mb-3">Portfolio</p>
-              <h2 className="text-3xl md:text-4xl font-bold tracking-tighter text-foreground mb-2">Featured Work</h2>
-              <p className="text-muted-foreground">Select highlights from recent hardware and embedded systems projects.</p>
+              <p className="text-[11px] font-semibold text-primary uppercase tracking-[0.2em] mb-3">
+                {t("Portfolio", "معرض الأعمال")}
+              </p>
+              <h2 className="text-3xl md:text-4xl font-bold tracking-tighter text-foreground mb-2">
+                {t("Featured Work", "أبرز الأعمال")}
+              </h2>
+              <p className="text-muted-foreground">
+                {t(
+                  "Select highlights from recent hardware and embedded systems projects.",
+                  "أبرز المشاريع الحديثة في هندسة الأجهزة والأنظمة المدمجة.",
+                )}
+              </p>
             </div>
             <Link href="/projects" className="hidden sm:flex items-center gap-2 text-primary font-medium hover:text-primary/80 transition-colors">
-              View All <ChevronRight className="w-4 h-4" />
+              {t("View All", "عرض الكل")} <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
 
@@ -606,7 +647,7 @@ export function Home() {
                       href={`/projects/${project.id}`}
                       className="w-full py-2.5 text-center text-sm font-medium rounded-lg bg-background border border-border text-foreground group-hover:border-primary/50 group-hover:text-primary transition-colors duration-200"
                     >
-                      View Details
+                      {t("View Details", "عرض التفاصيل")}
                     </Link>
                   </div>
                 </motion.div>
@@ -616,7 +657,7 @@ export function Home() {
 
           <div className="mt-8 sm:hidden text-center">
             <Link href="/projects" className="inline-flex items-center gap-2 text-primary font-medium hover:text-primary/80 transition-colors">
-              View All Projects <ChevronRight className="w-4 h-4" />
+              {t("View All Projects", "عرض جميع المشاريع")} <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
         </div>
