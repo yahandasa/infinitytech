@@ -62,21 +62,28 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const isRTL = lang === "ar";
 
   useEffect(() => {
-    const root = document.documentElement;
+    const root = document.documentElement; // <html>
+    const body = document.body;
 
     /*
-     * Layout direction: ALWAYS ltr.
-     * The page structure never flips — Arabic text uses text-align / unicode
-     * bidi for correct rendering inside an LTR grid.
+     * Layout direction: ALWAYS ltr on <html>.
+     * The page structure never flips — only text elements inside
+     * .lang-ar get direction:rtl via the global CSS rules in index.css.
      */
     root.setAttribute("dir", "ltr");
 
     /*
-     * lang attribute drives the CSS font rule in index.css:
-     *   [lang="ar"] { font-family: var(--font-arabic); ... }
-     * It also benefits screen readers and SEO crawlers.
+     * lang attribute benefits screen readers and SEO crawlers.
      */
     root.setAttribute("lang", lang);
+
+    /*
+     * Global language class on <body> — drives the .lang-ar / .lang-en
+     * CSS rules that apply font, direction, and text-align to all prose
+     * elements site-wide without any per-component class additions.
+     */
+    body.classList.remove("lang-en", "lang-ar");
+    body.classList.add(lang === "ar" ? "lang-ar" : "lang-en");
 
     localStorage.setItem("it-lang", lang);
   }, [lang]);

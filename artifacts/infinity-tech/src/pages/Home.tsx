@@ -228,7 +228,7 @@ export function Home() {
   const { data: projects, isLoading } = useProjects();
   const featuredProjects = projects?.slice(0, 3) || [];
   const { displayed: codeDisplayed, done: codeDone } = useCodeTypewriter(CODE_SNIPPET, 600);
-  const { t, textClass } = useLanguage();
+  const { t } = useLanguage();
 
   return (
     <div className="w-full flex flex-col min-h-screen">
@@ -280,7 +280,7 @@ export function Home() {
           {/* Subtitle */}
           <motion.p
             {...fadeUp(0.38)}
-            className={`text-sm sm:text-[15px] text-muted-foreground leading-[1.75] mb-7 max-w-lg ${textClass}`}
+            className="text-sm sm:text-[15px] text-muted-foreground leading-[1.75] mb-7 max-w-lg"
           >
             {t(
               <>
@@ -353,7 +353,7 @@ export function Home() {
 
                 <motion.p
                   {...fadeUp(0.38)}
-                  className={`text-[15px] md:text-base text-muted-foreground leading-[1.75] mb-6 max-w-xl ${textClass}`}
+                  className="text-[15px] md:text-base text-muted-foreground leading-[1.75] mb-6 max-w-xl"
                 >
                   {t(
                     <>
@@ -503,10 +503,10 @@ export function Home() {
       <section className="py-24 relative z-10 bg-background/50 cv-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-12">
-            <p className={`text-[11px] font-semibold text-primary uppercase mb-3 ${textClass}`}>
+            <p className="text-[11px] font-semibold text-primary uppercase mb-3">
               {t("Core Disciplines", "التخصصات الأساسية")}
             </p>
-            <h2 className={`text-3xl md:text-4xl font-bold tracking-tighter text-foreground ${textClass}`}>
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tighter text-foreground">
               {t("What I Build", "ما أبنيه")}
             </h2>
           </div>
@@ -565,10 +565,10 @@ export function Home() {
 
                 {/* Body */}
                 <div className="flex flex-col gap-2">
-                  <h3 className={`text-[13.5px] font-bold text-foreground tracking-tight leading-snug ${textClass}`}>
+                  <h3 className="text-[13.5px] font-bold text-foreground tracking-tight leading-snug">
                     {t(f.title, f.titleAr)}
                   </h3>
-                  <p className={`text-[12.5px] text-muted-foreground leading-[1.72] ${textClass}`}>
+                  <p className="text-[12.5px] text-muted-foreground leading-[1.72]">
                     {t(f.desc, f.descAr)}
                   </p>
                 </div>
@@ -594,13 +594,13 @@ export function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-12">
             <div>
-              <p className={`text-[11px] font-semibold text-primary uppercase mb-3 ${textClass}`}>
+              <p className="text-[11px] font-semibold text-primary uppercase mb-3">
                 {t("Portfolio", "معرض الأعمال")}
               </p>
-              <h2 className={`text-3xl md:text-4xl font-bold tracking-tighter text-foreground mb-2 ${textClass}`}>
+              <h2 className="text-3xl md:text-4xl font-bold tracking-tighter text-foreground mb-2">
                 {t("Featured Work", "أبرز الأعمال")}
               </h2>
-              <p className={`text-muted-foreground ${textClass}`}>
+              <p className="text-muted-foreground">
                 {t(
                   "Select highlights from recent hardware and embedded systems projects.",
                   "أبرز المشاريع الحديثة في هندسة الأجهزة والأنظمة المدمجة.",

@@ -494,6 +494,108 @@
   }
 }
 
+/* ─── Global Language Toggle Classes ─────────────────────── */
+/*
+ * Applied to <body> by LanguageContext — not to <html>, so the page
+ * layout direction (dir="ltr") is never touched.
+ *
+ * Strategy:
+ *   • Font switches globally for every element.
+ *   • Layout containers (div, section, nav, etc.) are pinned to
+ *     direction: ltr so flex/grid row order is NEVER reversed.
+ *   • Prose elements (p, h1–h6, li, input, label, td, th) get
+ *     direction: rtl + text-align: right in Arabic mode.
+ *   • Code/pre blocks always stay LTR + monospace font.
+ */
+
+/* ── Arabic ──────────────────────────────────────────────── */
+body.lang-ar {
+  font-family: 'Cairo', 'IBM Plex Sans Arabic', var(--font-arabic), sans-serif;
+  letter-spacing: 0;
+  line-height: 1.8;
+}
+body.lang-ar * {
+  font-family: 'Cairo', 'IBM Plex Sans Arabic', var(--font-arabic), sans-serif;
+  letter-spacing: 0 !important;
+}
+
+/* Layout containers: always ltr — flex/grid/nav row order preserved */
+body.lang-ar div,
+body.lang-ar section,
+body.lang-ar nav,
+body.lang-ar header,
+body.lang-ar footer,
+body.lang-ar main,
+body.lang-ar aside,
+body.lang-ar article,
+body.lang-ar ul,
+body.lang-ar ol,
+body.lang-ar form,
+body.lang-ar fieldset,
+body.lang-ar table,
+body.lang-ar thead,
+body.lang-ar tbody,
+body.lang-ar tr {
+  direction: ltr;
+}
+
+/* Prose / form elements: RTL text direction + right alignment */
+body.lang-ar p,
+body.lang-ar h1, body.lang-ar h2, body.lang-ar h3,
+body.lang-ar h4, body.lang-ar h5, body.lang-ar h6,
+body.lang-ar li,
+body.lang-ar label,
+body.lang-ar input,
+body.lang-ar textarea,
+body.lang-ar select,
+body.lang-ar td,
+body.lang-ar th {
+  direction: rtl;
+  text-align: right;
+  unicode-bidi: plaintext;  /* numbers/Latin inside Arabic render correctly */
+}
+
+/* Headings: Arabic typeface wins over Space Grotesk set in @layer base */
+body.lang-ar h1, body.lang-ar h2, body.lang-ar h3,
+body.lang-ar h4, body.lang-ar h5, body.lang-ar h6 {
+  line-height: 1.5;
+}
+
+/* Code blocks: always LTR + monospace — language never changes these */
+body.lang-ar code, body.lang-ar pre,
+body.lang-ar kbd, body.lang-ar samp {
+  direction: ltr;
+  text-align: left;
+  font-family: var(--font-mono) !important;
+  letter-spacing: normal !important;
+  unicode-bidi: embed;
+}
+
+/* ── English ─────────────────────────────────────────────── */
+body.lang-en {
+  font-family: var(--font-sans);
+}
+body.lang-en * {
+  font-family: inherit;
+}
+body.lang-en p,
+body.lang-en h1, body.lang-en h2, body.lang-en h3,
+body.lang-en h4, body.lang-en h5, body.lang-en h6,
+body.lang-en li,
+body.lang-en label,
+body.lang-en input,
+body.lang-en textarea,
+body.lang-en select,
+body.lang-en td,
+body.lang-en th {
+  direction: ltr;
+  text-align: left;
+}
+/* Headings: restore display typeface (Space Grotesk) in English */
+body.lang-en h1, body.lang-en h2, body.lang-en h3 {
+  font-family: var(--font-display);
+}
+
 /* ─── Reduced Motion ──────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *,
