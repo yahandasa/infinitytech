@@ -114,6 +114,25 @@ Security:
 - **Input sanitization** — allowlist of writable fields on PATCH `/api/projects`
 - **Body size limit** — 1 MB
 
+## Translation System
+
+**File**: `artifacts/api-server/src/lib/translate.ts`
+
+Two-layer pipeline used on every `POST /api/projects` and `PATCH /api/projects/:id` write when only one language is provided:
+
+| Layer | Tool | Notes |
+|---|---|---|
+| Layer 1 | OpenAI `gpt-5-mini` | Context-aware, engineering-domain system prompt; acronyms (PCB, RTOS, I2C …) kept in Latin script |
+| Fallback | MyMemory MT | Used only when OpenAI call fails |
+| Fallback layer 2 | Engineering dictionary | 60+ term overrides applied on top of MyMemory output only |
+| Cache | In-process LRU (2 000 entries) | Keyed by `{lang}→{lang}:{text}`; cleared between server restarts |
+
+**Manual override**: If both `title_en` and `title_ar` (or any `*_en`/`*_ar` pair) are supplied in the request body, the pipeline is skipped entirely for that field — the provided values are saved verbatim.
+
+**Env vars** (auto-provisioned by Replit AI Integrations — no user action needed):
+- `AI_INTEGRATIONS_OPENAI_BASE_URL`
+- `AI_INTEGRATIONS_OPENAI_API_KEY`
+
 ## TypeScript & Composite Projects
 
 Every package extends `tsconfig.base.json` (`composite: true`). Build order:
