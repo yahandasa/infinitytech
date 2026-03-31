@@ -5,6 +5,7 @@ import analyticsRouter from "./analytics";
 import commentsRouter from "./comments";
 import notificationsRouter from "./notifications";
 import projectsRouter from "./projects";
+import skillsRouter from "./skills";
 import setupRouter from "./setup";
 import contactRouter from "./contact";
 
@@ -16,6 +17,7 @@ router.use(analyticsRouter);
 router.use(commentsRouter);
 router.use(notificationsRouter);
 router.use(projectsRouter);
+router.use(skillsRouter);
 router.use(setupRouter);
 router.use(contactRouter);
 
