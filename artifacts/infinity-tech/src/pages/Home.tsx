@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
-import { ArrowRight, ChevronRight, CircuitBoard, Cpu, Layers, Mail, Microchip, Wifi, Zap } from "lucide-react";
+import { ArrowRight, ChevronRight, CircuitBoard, Cpu, Layers, Mail, Wifi, Zap } from "lucide-react";
 import { useProjects } from "@/hooks/use-projects";
 import { SEO, SITE_JSONLD, PERSON_JSONLD } from "@/components/SEO";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -510,65 +510,73 @@ export function Home() {
               {t("What I Build", "ما أبنيه")}
             </h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {[
               {
                 icon: Layers,
                 badge: "Up to 6L",
-                title: "PCB Layout & Signal Integrity",
-                desc: "Multi-layer stack-up design with controlled-impedance routing for high-speed differential pairs, CAN bus transceivers, and dense power rails. Every layer assignment optimized for signal return paths, thermal relief, and DFM-ready production output.",
+                title:    "PCB Layout & Signal Integrity",
+                titleAr:  "تصميم PCB وسلامة الإشارة",
+                desc:     "Multi-layer stack-up design with controlled-impedance routing for high-speed differential pairs, CAN bus transceivers, and dense power rails. Every layer assignment optimized for signal return paths, thermal relief, and DFM-ready production output.",
+                descAr:   "تصميم تركيبة متعددة الطبقات مع توجيه محكوم الإشارة للأزواج التفاضلية عالية السرعة، ومحولات ناقل CAN، ومسارات الطاقة المكثّفة. كل طبقة محسَّنة لضمان مسارات العودة الكهربائية والتبديد الحراري ومخرجات جاهزة للتصنيع.",
                 tags: ["KiCad", "Altium Designer", "Impedance Control", "CISPR 32B", "DFM"],
               },
               {
                 icon: Cpu,
                 badge: "ARM Cortex-M",
-                title: "Embedded Firmware & RTOS",
-                desc: "Bare-metal and FreeRTOS firmware on STM32 F4/H7 targets — DMA-driven sensor acquisition at 8 kHz, lock-free ring buffers, CAN/SPI/I2C/USB protocol stacks, and deterministic task scheduling under hard real-time constraints.",
+                title:    "Embedded Firmware & RTOS",
+                titleAr:  "البرمجيات المدمجة ونظام التشغيل الفوري",
+                desc:     "Bare-metal and FreeRTOS firmware on STM32 F4/H7 targets — DMA-driven sensor acquisition at 8 kHz, lock-free ring buffers, CAN/SPI/I2C/USB protocol stacks, and deterministic task scheduling under hard real-time constraints.",
+                descAr:   "برمجيات معدنية وFreeRTOS على معالجات STM32 F4/H7 — استقطاب بيانات المستشعرات عبر DMA بتردد 8 كيلوهرتز، ومخازن مؤقتة حلقية خالية من القفل، ومداخل بروتوكول CAN/SPI/I2C/USB، وجدولة مهام حتمية وفق قيود الزمن الفعلي الصارم.",
                 tags: ["C / C++", "FreeRTOS", "STM32", "DMA", "CAN Bus"],
-              },
-              {
-                icon: Zap,
-                badge: "500 kHz",
-                title: "Power Electronics & EMI",
-                desc: "GaN FET switching regulators, multi-cell LiPo BMS, and low-noise LDO rails tailored for mixed-signal boards. EMI filtering designed and bench-validated against CISPR 32 Class B — from bulk decoupling strategy to ferrite bead placement.",
-                tags: ["GaN FETs", "BMS", "EMI Filter", "LDO Design", "CISPR 32B"],
               },
               {
                 icon: CircuitBoard,
                 badge: "ROS2 / Nav2",
-                title: "Robotics & Autonomous Systems",
-                desc: "Full-stack robotic platforms spanning custom sensor PCBs, stereo vision pipelines, and Nav2-based autonomous navigation. Sensor fusion using EKF across IMU, wheel encoders, and lidar — from bench prototype to field-tested deployment.",
+                title:    "Robotics & Autonomous Systems",
+                titleAr:  "الروبوتات والأنظمة المستقلة",
+                desc:     "Full-stack robotic platforms spanning custom sensor PCBs, stereo vision pipelines, and Nav2-based autonomous navigation. Sensor fusion using EKF across IMU, wheel encoders, and lidar — from bench prototype to field-tested deployment.",
+                descAr:   "منصات روبوتية متكاملة تشمل لوحات PCB مخصصة للمستشعرات، وأنابيب رؤية ستيريوسكوبية، وملاحة مستقلة مبنية على Nav2. دمج بيانات المستشعرات عبر EKF بين وحدة القياس القصوري ومشفرات العجلات والليدار — من النموذج الأولي إلى الاختبار الميداني.",
                 tags: ["ROS2", "SLAM", "EKF Fusion", "OpenCV", "Nav2"],
               },
             ].map((f, idx) => (
               <motion.div
                 key={idx}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: idx * 0.1 }}
-                className="p-5 rounded-xl bg-card border border-border hover:border-primary/25 transition-all duration-300 group flex flex-col gap-3.5"
+                transition={{ duration: 0.4, delay: idx * 0.1, ease: "easeOut" }}
+                whileHover={{
+                  y: -6,
+                  scale: 1.018,
+                  boxShadow: "0 16px 48px rgba(34,211,238,0.08), 0 4px 16px rgba(0,0,0,0.28)",
+                }}
+                className="p-6 rounded-2xl bg-card border border-border hover:border-primary/30 transition-[border-color] duration-300 ease-out group flex flex-col gap-4 cursor-default"
               >
                 {/* Header row */}
                 <div className="flex items-center justify-between">
-                  <div className="w-8 h-8 rounded-lg bg-background border border-border flex items-center justify-center group-hover:bg-primary/10 group-hover:border-primary/30 transition-colors duration-300">
-                    <f.icon className="w-4 h-4 text-primary" />
+                  <div className="w-9 h-9 rounded-xl bg-background border border-border flex items-center justify-center group-hover:bg-primary/10 group-hover:border-primary/35 transition-colors duration-300">
+                    <f.icon className="w-4.5 h-4.5 text-primary" />
                   </div>
-                  <span className="text-[9px] font-mono font-semibold text-primary/70 tracking-widest uppercase bg-primary/5 border border-primary/15 px-2 py-0.5 rounded">
+                  <span className="text-[9px] font-mono font-semibold text-primary/75 tracking-widest uppercase bg-primary/5 border border-primary/15 px-2.5 py-1 rounded-md">
                     {f.badge}
                   </span>
                 </div>
 
                 {/* Body */}
-                <div>
-                  <h3 className="text-sm font-bold text-foreground mb-1.5 tracking-tight">{f.title}</h3>
-                  <p className="text-xs text-muted-foreground leading-[1.7]">{f.desc}</p>
+                <div className="flex flex-col gap-2">
+                  <h3 className="text-[13.5px] font-bold text-foreground tracking-tight leading-snug">
+                    {t(f.title, f.titleAr)}
+                  </h3>
+                  <p className="text-[12.5px] text-muted-foreground leading-[1.72]">
+                    {t(f.desc, f.descAr)}
+                  </p>
                 </div>
 
                 {/* Tags */}
-                <div className="flex flex-wrap gap-1.5 mt-auto">
+                <div className="flex flex-wrap gap-1.5 mt-auto pt-1">
                   {f.tags.map(tag => (
-                    <span key={tag} className="text-[9px] font-mono font-medium px-1.5 py-0.5 rounded bg-background border border-border text-muted-foreground/60">
+                    <span key={tag} className="text-[9px] font-mono font-medium px-1.5 py-0.5 rounded bg-background border border-border text-muted-foreground/55 group-hover:border-primary/15 transition-colors duration-300">
                       {tag}
                     </span>
                   ))}
