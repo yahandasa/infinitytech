@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
-import { ArrowRight, MapPin, Mail, Cpu, Layers, Zap, Bot } from "lucide-react";
+import { ArrowRight, Cpu, Layers, Zap, Bot } from "lucide-react";
 import { SEO } from "@/components/SEO";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -197,22 +197,6 @@ function SkillsSkeleton() {
   );
 }
 
-// ─── Vision stat block ────────────────────────────────────────────────────────
-
-function Stat({ value, label }: { value: string; label: string }) {
-  return (
-    <div className="text-center">
-      <p
-        className="text-3xl sm:text-4xl font-black mb-1"
-        style={{ color: "hsl(188 86% 53%)" }}
-      >
-        {value}
-      </p>
-      <p className="text-xs text-white/40 font-medium uppercase tracking-widest">{label}</p>
-    </div>
-  );
-}
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export function About() {
@@ -401,119 +385,7 @@ export function About() {
       </section>
 
       {/* ════════════════════════════════════════════════════════════════════
-          §2  WHO I AM
-          ════════════════════════════════════════════════════════════════════ */}
-      <section className="max-w-7xl mx-auto px-6 sm:px-8">
-        <Divider />
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-
-          {/* Profile card */}
-          <Reveal delay={0}>
-            <div className="relative mx-auto" style={{ maxWidth: "380px" }}>
-              {/* Glow behind card */}
-              <div
-                className="absolute -inset-4 rounded-3xl blur-3xl pointer-events-none"
-                style={{ background: "rgba(34,211,238,0.06)" }}
-              />
-              <div
-                className="relative overflow-hidden rounded-2xl"
-                style={{
-                  background: "rgba(10,15,24,0.72)",
-                  backdropFilter: "blur(12px)",
-                  WebkitBackdropFilter: "blur(12px)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  boxShadow: "0 24px 64px rgba(0,0,0,0.5)",
-                }}
-              >
-                {/* Image */}
-                <div className="relative overflow-hidden">
-                  <div
-                    className="absolute inset-0 z-10 pointer-events-none"
-                    style={{ boxShadow: "inset 0 0 0 1px rgba(34,211,238,0.1)" }}
-                  />
-                  <img
-                    src={`${import.meta.env.BASE_URL}images/avatar.png`}
-                    alt="Eng. Fares Salah"
-                    loading="lazy"
-                    className="w-full aspect-square object-cover grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-[filter,opacity] duration-500"
-                  />
-                  <div
-                    className="absolute bottom-0 inset-x-0 h-24 pointer-events-none"
-                    style={{ background: "linear-gradient(to top, rgba(10,15,24,0.95) 0%, transparent 100%)" }}
-                  />
-                </div>
-
-                {/* Identity — always LTR, never shifts */}
-                <div className="px-6 pb-6 pt-4" dir="ltr" style={{ textAlign: "left" }}>
-                  <h2 className="font-mono font-bold text-white text-xl mb-1 tracking-tight">
-                    Eng. Fares Salah
-                  </h2>
-                  <p className="text-sm font-medium mb-5" style={{ color: "hsl(188 86% 53%)" }}>
-                    Hardware Engineer & PCB Designer
-                  </p>
-                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center gap-2 text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
-                      <MapPin className="w-3 h-3 shrink-0" style={{ color: "hsl(188 86% 53% / 0.6)" }} />
-                      <span>Alexandria, Egypt</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
-                      <Mail className="w-3 h-3 shrink-0" style={{ color: "hsl(188 86% 53% / 0.6)" }} />
-                      <span>fares@infinitytech.dev</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Reveal>
-
-          {/* Bio content — direction-aware via page dir */}
-          <div className="space-y-6">
-            <Reveal delay={100}>
-              <SectionLabel>{t("Who I Am", "من أنا")}</SectionLabel>
-              <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight mt-1">
-                {t(
-                  <>Engineer by passion,<br />builder by nature.</>,
-                  <>مهندس بالشغف،<br />مبتكر بالطبيعة.</>,
-                )}
-              </h2>
-            </Reveal>
-
-            <Reveal delay={200}>
-              <p className="text-base leading-relaxed" style={{ color: "rgba(255,255,255,0.55)" }}>
-                {t(
-                  "I'm a hardware engineer based in Alexandria, specialising in the full electronics stack — from silicon-level schematic capture and multi-layer PCB design, through bare-metal firmware, to real-time robotic control systems.",
-                  "أنا مهندس أجهزة مقيم في الإسكندرية، متخصص في المكدس الإلكتروني الكامل — من رسم المخططات على مستوى السيليكون وتصميم لوحات PCB متعددة الطبقات، وصولاً إلى البرمجيات المدمجة وأنظمة التحكم الروبوتي الآني.",
-                )}
-              </p>
-            </Reveal>
-
-            <Reveal delay={280}>
-              <p className="text-base leading-relaxed" style={{ color: "rgba(255,255,255,0.55)" }}>
-                {t(
-                  "My philosophy is first-principles design: understand the system from the substrate up, then build with precision. Whether it's a 6-layer high-density PCB, a lock-free DMA ring buffer, or a fine-tuned motor PID loop — constraints are fuel.",
-                  "فلسفتي هي التصميم من المبادئ الأولى: فهم النظام من الطبقة الأساسية، ثم البناء بدقة. سواء كان ذلك لوحة PCB عالية الكثافة بستة طبقات، أو حلقة DMA خالية من الإقفال، أو حلقة PID دقيقة للمحرك — القيود هي الوقود.",
-                )}
-              </p>
-            </Reveal>
-
-            {/* Stat row */}
-            <Reveal delay={360}>
-              <div
-                className="grid grid-cols-3 gap-4 pt-4 mt-2"
-                style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}
-              >
-                <Stat value="5+" label={t("Years", "سنوات")} />
-                <Stat value="30+" label={t("Projects", "مشروع")} />
-                <Stat value="4" label={t("Domains", "مجالات")} />
-              </div>
-            </Reveal>
-          </div>
-        </div>
-      </section>
-
-      {/* ════════════════════════════════════════════════════════════════════
-          §3  SKILLS / TECH STACK
+          §2  SKILLS / TECH STACK
           ════════════════════════════════════════════════════════════════════ */}
       <section className="max-w-7xl mx-auto px-6 sm:px-8">
         <Divider />

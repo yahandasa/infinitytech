@@ -611,6 +611,41 @@ body.lang-en h1, body.lang-en h2, body.lang-en h3 {
   .invisible { visibility: hidden !important; }
 }
 
+/* ─── Navbar: immune to language-switch reflow ──────────────
+ *
+ * Problem: `body.lang-ar * { font-family: Cairo; letter-spacing: 0 !important }`
+ * cascades into the header and changes:
+ *   1. Font metrics (Cairo is visually taller than Inter / Space Grotesk)
+ *   2. Letter-spacing (strips the tracking from the INFINITY. wordmark)
+ *   3. line-height (body.lang-ar sets 1.8 which cascades)
+ *
+ * Fix strategy:
+ *   - Hard-lock the header height with !important (belt + suspenders with
+ *     the inline style in Navbar.tsx)
+ *   - Restore wordmark letter-spacing with a higher-specificity !important
+ *   - Clamp line-height on all header children to 1 so font-metric changes
+ *     cannot push content outside the locked height box
+ * ─────────────────────────────────────────────────────────── */
+header[data-navbar] {
+  height: 4.5rem !important;
+  min-height: 4.5rem !important;
+  max-height: 4.5rem !important;
+}
+
+/* Wordmark tracking — restores spacing stripped by the global AR rule */
+body.lang-ar header[data-navbar] .nb-wordmark {
+  letter-spacing: 0.12em !important;
+}
+body.lang-ar header[data-navbar] .nb-wordmark-sub {
+  letter-spacing: 0.32em !important;
+}
+
+/* Line-height shield — prevents the body 1.8 cascade from expanding rows */
+body.lang-ar header[data-navbar],
+body.lang-ar header[data-navbar] * {
+  line-height: 1 !important;
+}
+
 /* ─── Admin input base style ──────────────────────────────── */
 .admin-input {
   width: 100%;
