@@ -270,7 +270,7 @@ export function ProjectDetail() {
                 {project.status}
               </span>
             </div>
-            <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-foreground mb-3">
+            <h1 className="fluid-h1 font-black tracking-tighter text-foreground mb-3">
               {t(project.title, project.titleAr)}
             </h1>
             <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl">

@@ -500,13 +500,13 @@ export function Home() {
       <div className="section-divider" />
 
       {/* ── Expertise ─────────────────────────────────────── */}
-      <section className="py-24 relative z-10 bg-background/50 cv-auto">
+      <section className="section-y relative z-10 bg-background/50 cv-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-12">
+          <div className="mb-10 sm:mb-12">
             <p className="text-[11px] font-semibold text-primary uppercase mb-3">
               {t("Core Disciplines", "التخصصات الأساسية")}
             </p>
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tighter text-foreground">
+            <h2 className="fluid-h2 font-bold tracking-tighter text-foreground">
               {t("What I Build", "ما أبنيه")}
             </h2>
           </div>
@@ -590,14 +590,14 @@ export function Home() {
       <div className="section-divider" />
 
       {/* ── Featured Projects ─────────────────────────────── */}
-      <section className="py-24 relative z-10 bg-background/30 cv-auto">
+      <section className="section-y relative z-10 bg-background/30 cv-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-12">
+          <div className="flex flex-wrap items-start justify-between gap-4 mb-10 sm:mb-12">
             <div>
               <p className="text-[11px] font-semibold text-primary uppercase mb-3">
                 {t("Portfolio", "معرض الأعمال")}
               </p>
-              <h2 className="text-3xl md:text-4xl font-bold tracking-tighter text-foreground mb-2">
+              <h2 className="fluid-h2 font-bold tracking-tighter text-foreground mb-2">
                 {t("Featured Work", "أبرز الأعمال")}
               </h2>
               <p className="text-muted-foreground">
@@ -613,13 +613,13 @@ export function Home() {
           </div>
 
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3].map(i => (
                 <div key={i} className="h-96 rounded-2xl bg-card animate-pulse border border-border" />
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {featuredProjects.map((project, idx) => (
                 <motion.div
                   key={project.id}

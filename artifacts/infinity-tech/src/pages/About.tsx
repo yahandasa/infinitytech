@@ -95,7 +95,7 @@ export function About() {
           Two-column: profile card (fixed 300 px) + bio.
           The card block is always dir="ltr" so it never shifts on lang toggle.
           ════════════════════════════════════════════════════════════════════ */}
-      <section className="max-w-7xl mx-auto px-6 sm:px-8 pt-28 sm:pt-32 pb-4">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-28 md:pt-32 pb-4">
 
         <div className="flex flex-col lg:flex-row gap-10 lg:gap-16 lg:items-start">
 
@@ -199,7 +199,7 @@ export function About() {
             <Reveal delay={80}>
               <Eyebrow>{t("About Me", "عني")}</Eyebrow>
               <h2
-                className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight"
+                className="fluid-h2 font-black text-white tracking-tight"
                 style={{ marginTop: "4px" }}
               >
                 {t(
@@ -264,7 +264,7 @@ export function About() {
           Single clean paragraph + icon-bullet list.
           The 2×2 feature grid is replaced with an icon list for clarity.
           ════════════════════════════════════════════════════════════════════ */}
-      <section className="max-w-7xl mx-auto px-6 sm:px-8">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Divider />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-start">
@@ -274,7 +274,7 @@ export function About() {
             <Reveal delay={0}>
               <Eyebrow>{t("Vision", "الرؤية")}</Eyebrow>
               <h2
-                className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight"
+                className="fluid-h2 font-black text-white tracking-tight"
                 style={{ marginTop: "4px" }}
               >
                 {t(
@@ -380,7 +380,7 @@ export function About() {
           §4  CTA — Premium "Let's Build"
           Layered gradient, top-edge glow, strong headline, single button.
           ════════════════════════════════════════════════════════════════════ */}
-      <section className="max-w-7xl mx-auto px-6 sm:px-8 pb-24 sm:pb-32">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 sm:pb-24 md:pb-32">
         <Divider />
 
         <Reveal delay={0}>
@@ -407,7 +407,7 @@ export function About() {
               <Eyebrow>{t("Let's Build", "لنبني معاً")}</Eyebrow>
 
               <h2
-                className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight mt-2 mb-4"
+                className="fluid-h1 font-black text-white tracking-tight leading-tight mt-2 mb-4"
               >
                 {t(
                   <>Have a project<br />in mind?</>,

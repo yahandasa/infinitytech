@@ -23,7 +23,7 @@ export function Projects() {
   const { t, isRTL } = useLanguage();
 
   return (
-    <div className="min-h-screen w-full pt-32 pb-24">
+    <div className="min-h-screen w-full pt-24 sm:pt-32 pb-16 sm:pb-24">
       <SEO
         title={t("Projects & Research", "المشاريع والبحوث")}
         description={t(
@@ -37,10 +37,10 @@ export function Projects() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="mb-16"
+          className="mb-10 sm:mb-16"
         >
           <h1
-            className="text-4xl md:text-5xl font-black tracking-tighter text-foreground mb-4"
+            className="fluid-h1 font-black tracking-tighter text-foreground mb-4"
             style={{ textAlign: isRTL ? "right" : "left" }}
           >
             {t(

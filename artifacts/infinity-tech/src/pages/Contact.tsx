@@ -55,7 +55,7 @@ export function Contact() {
   };
 
   return (
-    <div className="min-h-screen w-full pt-32 pb-24 relative">
+    <div className="min-h-screen w-full pt-24 sm:pt-32 pb-16 sm:pb-24 relative">
       <SEO
         title={t("Contact", "التواصل")}
         description={t(
@@ -72,9 +72,9 @@ export function Contact() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="text-center max-w-2xl mx-auto mb-16"
+          className="text-center max-w-2xl mx-auto mb-10 sm:mb-16"
         >
-          <h1 className="text-4xl md:text-5xl font-black text-foreground mb-4">
+          <h1 className="fluid-h1 font-black text-foreground mb-4">
             {t(
               <>Initialize <span className="text-primary">Connection</span></>,
               <>ابدأ <span className="text-primary">التواصل</span></>,
@@ -88,7 +88,7 @@ export function Contact() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 max-w-5xl mx-auto">
 
           {/* Contact Info */}
           <motion.div
@@ -174,7 +174,7 @@ export function Contact() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="lg:col-span-8 p-8 md:p-10 rounded-2xl bg-card border border-border relative overflow-hidden"
+            className="lg:col-span-8 p-5 sm:p-8 md:p-10 rounded-2xl bg-card border border-border relative overflow-hidden"
           >
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 relative z-10">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
