@@ -7,17 +7,6 @@ import {
 import { SEO } from "@/components/SEO";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-interface Skill {
-  id: string;
-  name_en: string;
-  name_ar: string;
-  category: string;
-  level?: string | null;
-  sort_order: number;
-}
-
 // ─── Intersection-observer fade-in ───────────────────────────────────────────
 
 function useFadeIn(threshold = 0.07) {
@@ -85,173 +74,10 @@ function Divider() {
   );
 }
 
-// ─── Skill category card ──────────────────────────────────────────────────────
-/*
- * Layout guarantee: every card is a flex column with the tags pushed to the
- * bottom via flex-grow on the description area.  A hard min-height prevents
- * cards from shrinking when Arabic text is shorter than English (or vice-versa).
- */
-
-const CATEGORY_META: Record<string, {
-  icon: React.ReactNode;
-  descEn: string;
-  descAr: string;
-}> = {
-  "Hardware & PCB": {
-    icon: <Layers className="w-5 h-5" />,
-    descEn: "Multi-layer PCB design, signal integrity, and component selection for high-density boards.",
-    descAr: "تصميم لوحات PCB متعددة الطبقات، سلامة الإشارة، واختيار المكونات للوحات عالية الكثافة.",
-  },
-  "Embedded Firmware": {
-    icon: <Cpu className="w-5 h-5" />,
-    descEn: "Bare-metal C/C++, RTOS scheduling, DMA pipelines, and interrupt-driven architectures.",
-    descAr: "C/C++ على المستوى المنخفض، جدولة RTOS، تعامل DMA، وبنيات مبنية على المقاطعات.",
-  },
-  "Robotics & Systems": {
-    icon: <Bot className="w-5 h-5" />,
-    descEn: "Real-time control loops, sensor fusion, motor drivers, and autonomous navigation.",
-    descAr: "حلقات تحكم آني، دمج حساسات، مشغّلات محركات، وملاحة مستقلة.",
-  },
-  "Tools": {
-    icon: <Zap className="w-5 h-5" />,
-    descEn: "EDA tools, version control, CI/CD pipelines, and simulation environments.",
-    descAr: "أدوات EDA، التحكم في الإصدارات، خطوط CI/CD، وبيئات المحاكاة.",
-  },
-};
-
-function SkillCard({
-  category,
-  items,
-  isRTL,
-  delay,
-}: {
-  category: string;
-  items: Skill[];
-  isRTL: boolean;
-  delay: number;
-}) {
-  const meta = CATEGORY_META[category];
-  const icon  = meta?.icon  ?? <Zap className="w-5 h-5" />;
-  const desc  = isRTL ? (meta?.descAr ?? meta?.descEn ?? "") : (meta?.descEn ?? "");
-
-  return (
-    <Reveal delay={delay} className="h-full">
-      <div
-        className="flex flex-col h-full rounded-2xl p-6 cursor-default"
-        style={{
-          background: "rgba(255,255,255,0.025)",
-          border: "1px solid rgba(255,255,255,0.07)",
-          minHeight: "260px",          /* fixed — prevents EN↔AR size jitter */
-          transition: "border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease",
-        }}
-        onMouseEnter={e => {
-          const el = e.currentTarget as HTMLElement;
-          el.style.borderColor = "rgba(34,211,238,0.22)";
-          el.style.boxShadow = "0 0 32px rgba(34,211,238,0.07)";
-          el.style.background = "rgba(34,211,238,0.03)";
-        }}
-        onMouseLeave={e => {
-          const el = e.currentTarget as HTMLElement;
-          el.style.borderColor = "rgba(255,255,255,0.07)";
-          el.style.boxShadow = "none";
-          el.style.background = "rgba(255,255,255,0.025)";
-        }}
-      >
-        {/* Icon */}
-        <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center mb-4 flex-shrink-0"
-          style={{ background: "rgba(34,211,238,0.1)", color: "hsl(188 86% 53%)" }}
-        >
-          {icon}
-        </div>
-
-        {/* Title */}
-        <h3
-          className="text-sm font-bold text-white mb-2"
-          style={{ lineHeight: 1.3 }}
-        >
-          {category}
-        </h3>
-
-        {/* Description — flex-grow so tags always sit at the bottom */}
-        <p
-          className="text-xs leading-relaxed flex-grow mb-4"
-          style={{ color: "rgba(255,255,255,0.4)" }}
-        >
-          {desc}
-        </p>
-
-        {/* Tech tags */}
-        <div className="flex flex-wrap gap-1.5">
-          {items.map(s => (
-            <span
-              key={s.id}
-              className="px-2 py-1 text-[11px] font-medium rounded-md select-none"
-              style={{
-                background: "rgba(255,255,255,0.06)",
-                color: "rgba(255,255,255,0.65)",
-                border: "1px solid rgba(255,255,255,0.08)",
-              }}
-            >
-              {isRTL && s.name_ar ? s.name_ar : s.name_en}
-            </span>
-          ))}
-        </div>
-      </div>
-    </Reveal>
-  );
-}
-
-// ─── Skills skeleton ──────────────────────────────────────────────────────────
-
-function SkillsSkeleton() {
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-      {[1, 2, 3, 4].map(i => (
-        <div
-          key={i}
-          className="p-6 rounded-2xl animate-pulse"
-          style={{
-            background: "rgba(255,255,255,0.025)",
-            border: "1px solid rgba(255,255,255,0.07)",
-            minHeight: "260px",
-          }}
-        >
-          <div className="w-10 h-10 rounded-xl bg-white/5 mb-4" />
-          <div className="h-3 w-28 rounded bg-white/5 mb-3" />
-          <div className="space-y-2 mb-4">
-            <div className="h-2 w-full rounded bg-white/5" />
-            <div className="h-2 w-4/5 rounded bg-white/5" />
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {[1, 2, 3].map(j => <div key={j} className="h-6 w-12 rounded-md bg-white/5" />)}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export function About() {
   const { t, isRTL } = useLanguage();
-  const [skills, setSkills] = useState<Skill[]>([]);
-  const [loadingSkills, setLoadingSkills] = useState(true);
-
-  useEffect(() => {
-    fetch("/api/skills")
-      .then(r => r.json())
-      .then((d: { skills?: Skill[] }) => setSkills(d.skills ?? []))
-      .catch(() => setSkills([]))
-      .finally(() => setLoadingSkills(false));
-  }, []);
-
-  const byCategory = skills.reduce<Record<string, Skill[]>>((acc, s) => {
-    const cat = s.category || "General";
-    (acc[cat] ??= []).push(s);
-    return acc;
-  }, {});
 
   return (
     <div className="min-h-screen w-full" dir={isRTL ? "rtl" : "ltr"}>
@@ -434,51 +260,7 @@ export function About() {
       </section>
 
       {/* ════════════════════════════════════════════════════════════════════
-          §2  SKILLS / TECH STACK
-          Fixed-height cards: icon + title + description + tags.
-          min-height on each card prevents EN↔AR size jitter.
-          ════════════════════════════════════════════════════════════════════ */}
-      <section className="max-w-7xl mx-auto px-6 sm:px-8">
-        <Divider />
-
-        <Reveal delay={0}>
-          <div className="mb-10 sm:mb-12">
-            <Eyebrow>{t("Tech Stack", "المكدس التقني")}</Eyebrow>
-            <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight mt-1 mb-3">
-              {t("Technical Arsenal", "الترسانة التقنية")}
-            </h2>
-            <p className="text-base" style={{ color: "rgba(255,255,255,0.4)", maxWidth: "480px" }}>
-              {t(
-                "Four domains. Every tool chosen for precision and real-world performance.",
-                "أربعة مجالات. كل أداة مختارة للدقة والأداء في العالم الحقيقي.",
-              )}
-            </p>
-          </div>
-        </Reveal>
-
-        {loadingSkills ? (
-          <SkillsSkeleton />
-        ) : Object.keys(byCategory).length === 0 ? (
-          <p className="text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>
-            {t("No skills listed yet.", "لم يتم إضافة مهارات بعد.")}
-          </p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 items-stretch">
-            {Object.entries(byCategory).map(([category, items], i) => (
-              <SkillCard
-                key={category}
-                category={category}
-                items={items}
-                isRTL={isRTL}
-                delay={i * 70}
-              />
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* ════════════════════════════════════════════════════════════════════
-          §3  VISION
+          §2  VISION
           Single clean paragraph + icon-bullet list.
           The 2×2 feature grid is replaced with an icon list for clarity.
           ════════════════════════════════════════════════════════════════════ */}
