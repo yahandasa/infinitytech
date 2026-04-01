@@ -15,23 +15,21 @@ interface Skill {
   sort_order: number;
 }
 
-// ─── Intersection-observer fade-in hook ───────────────────────────────────────
+// ─── Intersection-observer fade-in ────────────────────────────────────────────
 
 function useFadeIn() {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
-
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect(); } },
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } },
       { threshold: 0.08 },
     );
-    observer.observe(el);
-    return () => observer.disconnect();
+    obs.observe(el);
+    return () => obs.disconnect();
   }, []);
-
   return { ref, visible };
 }
 
@@ -124,7 +122,157 @@ function SkillsSkeleton() {
   );
 }
 
-// ─── Main page ────────────────────────────────────────────────────────────────
+// ─── Glassmorphism profile card ───────────────────────────────────────────────
+/*
+ * This card is INTENTIONALLY language-agnostic.
+ * Nothing inside changes direction or text-align on language toggle.
+ * The title is the fixed English string "Eng. Fares Salah".
+ * This is the only way to guarantee zero layout shift (CLS = 0) when switching
+ * between AR ↔ EN, because the card has a hard pixel width and all text is
+ * pinned left. The bio uses a fixed min-height so reflowing bilingual text
+ * cannot push the button downward.
+ */
+function ProfileCard({ t }: { t: (en: string | React.ReactNode, ar: string | React.ReactNode) => string | React.ReactNode }) {
+  return (
+    <div
+      className="group/card"
+      style={{ width: "100%", flexShrink: 0 }}
+    >
+      <div
+        style={{
+          background: "rgba(10, 15, 24, 0.72)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+          border: "1px solid rgba(255, 255, 255, 0.08)",
+          boxShadow: "0 8px 40px rgba(0,0,0,0.55), 0 0 0 0.5px rgba(34,211,238,0.04)",
+          borderRadius: "1.5rem",
+          overflow: "hidden",
+          transition: "transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease",
+        }}
+        onMouseEnter={e => {
+          const el = e.currentTarget as HTMLElement;
+          el.style.transform = "translateY(-4px)";
+          el.style.boxShadow = "0 16px 56px rgba(0,0,0,0.6), 0 0 0 1px rgba(34,211,238,0.14), 0 0 32px rgba(34,211,238,0.07)";
+          el.style.borderColor = "rgba(34,211,238,0.14)";
+        }}
+        onMouseLeave={e => {
+          const el = e.currentTarget as HTMLElement;
+          el.style.transform = "translateY(0)";
+          el.style.boxShadow = "0 8px 40px rgba(0,0,0,0.55), 0 0 0 0.5px rgba(34,211,238,0.04)";
+          el.style.borderColor = "rgba(255,255,255,0.08)";
+        }}
+      >
+        {/* ── Avatar ──────────────────────────────────────────────────────── */}
+        <div className="relative overflow-hidden">
+          {/* Inset ring on top of photo */}
+          <div
+            className="absolute inset-0 z-10 pointer-events-none"
+            style={{
+              borderRadius: "1.5rem 1.5rem 0 0",
+              boxShadow: "inset 0 0 0 1px rgba(34,211,238,0.12)",
+            }}
+          />
+          <img
+            src={`${import.meta.env.BASE_URL}images/avatar.png`}
+            alt="Eng. Fares Salah — Hardware Engineer"
+            loading="lazy"
+            className="
+              w-full aspect-square object-cover
+              grayscale opacity-75
+              group-hover/card:grayscale-0 group-hover/card:opacity-95
+              transition-[filter,opacity,transform] duration-500
+              scale-[1.01] group-hover/card:scale-100
+            "
+          />
+          <div
+            className="
+              absolute inset-0
+              opacity-0 group-hover/card:opacity-100
+              transition-opacity duration-500
+              pointer-events-none mix-blend-overlay
+            "
+            style={{ background: "rgba(34,211,238,0.08)" }}
+          />
+          <div
+            className="absolute bottom-0 inset-x-0 h-20 pointer-events-none"
+            style={{ background: "linear-gradient(to top, rgba(10,15,24,0.72) 0%, transparent 100%)" }}
+          />
+        </div>
+
+        {/* ── Identity block (ALWAYS LTR — never changes on lang toggle) ─── */}
+        <div className="px-6 pb-6 pt-4" dir="ltr" style={{ textAlign: "left" }}>
+
+          {/* Title — fixed English string, monospace for technical feel */}
+          <h1
+            className="font-mono font-bold text-white leading-tight mb-1 tracking-tight"
+            style={{ fontSize: "1.35rem", letterSpacing: "-0.01em" }}
+          >
+            Eng. Fares Salah
+          </h1>
+
+          {/* Role — bilingual but wrapped in a min-height container so reflowing
+              Arabic ↔ English text does NOT shift the elements below it */}
+          <div style={{ minHeight: "2.25rem" }} className="mb-4">
+            <p
+              className="text-sm font-medium leading-snug"
+              style={{ color: "hsl(188 86% 53%)" }}
+            >
+              {t("Hardware Engineer & PCB Designer", "مهندس أجهزة ومصمم لوحات PCB")}
+            </p>
+          </div>
+
+          {/* Meta — pinned left, never changes direction */}
+          <div className="flex flex-col gap-2 mb-5">
+            <div className="flex items-center gap-2 text-xs" style={{ color: "rgba(255,255,255,0.45)" }}>
+              <MapPin className="w-3 h-3 shrink-0" style={{ color: "hsl(188 86% 53% / 0.6)" }} />
+              <span>Alexandria, Egypt</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs" style={{ color: "rgba(255,255,255,0.45)" }}>
+              <Mail className="w-3 h-3 shrink-0" style={{ color: "hsl(188 86% 53% / 0.6)" }} />
+              <span>fares@infinitytech.dev</span>
+            </div>
+          </div>
+
+          {/* Bio — bilingual text wrapped in a fixed min-height container so
+              language-switch reflow never displaces the button below */}
+          <div style={{ minHeight: "4.5rem" }} className="mb-6">
+            <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.38)" }}>
+              {t(
+                "Specialising in the full hardware stack — from schematic capture and multi-layer PCB layout to bare-metal firmware and real-time control systems.",
+                "متخصص في المكدس الكامل للأجهزة — من رسم المخططات وتصميم لوحات PCB متعددة الطبقات إلى البرمجيات الثابتة وأنظمة التحكم الآني.",
+              )}
+            </p>
+          </div>
+
+          {/* CTA — full width, never reflows */}
+          <Link
+            href="/contact"
+            className="block w-full py-3 rounded-xl text-center text-sm font-bold tracking-wide text-primary-foreground active:scale-[0.97]"
+            style={{
+              background: "hsl(188 86% 53%)",
+              boxShadow: "0 0 0 0 rgba(34,211,238,0)",
+              transition: "background 0.2s ease, box-shadow 0.25s ease, transform 0.15s ease",
+            }}
+            onMouseEnter={e => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.background = "hsl(188 86% 47%)";
+              el.style.boxShadow = "0 0 22px rgba(34,211,238,0.42), 0 4px 12px rgba(0,0,0,0.3)";
+            }}
+            onMouseLeave={e => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.background = "hsl(188 86% 53%)";
+              el.style.boxShadow = "0 0 0 0 rgba(34,211,238,0)";
+            }}
+          >
+            تواصل
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export function About() {
   const { t, isRTL } = useLanguage();
@@ -153,166 +301,20 @@ export function About() {
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/*
-         * items-start is required so the sticky left column can work correctly.
-         * Without it the grid items stretch to the same height and sticky never
-         * has anywhere to scroll within.
-         */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 lg:items-start">
+        {/* Two-column layout via flex — sidebar has a hard pixel width so it
+            NEVER grows or shrinks when language content changes (zero CLS). */}
+        <div className="flex flex-col lg:flex-row gap-10 lg:gap-14 lg:items-start">
 
-          {/* ══ LEFT STICKY SIDEBAR ═══════════════════════════════════════════ */}
-          <div className="lg:col-span-4 lg:sticky lg:top-24 lg:self-start group/card">
-            {/*
-             * Glassmorphism card:
-             *   - backdrop-blur-xl + semi-transparent dark bg
-             *   - thin 1px rgba border
-             *   - deep ambient shadow
-             *   - subtle lift + glow intensification on hover
-             */}
-            <div
-              style={{
-                background: "rgba(10, 15, 24, 0.72)",
-                backdropFilter: "blur(12px)",
-                WebkitBackdropFilter: "blur(12px)",
-                border: "1px solid rgba(255, 255, 255, 0.08)",
-                boxShadow: "0 8px 40px rgba(0,0,0,0.55), 0 0 0 0.5px rgba(34,211,238,0.04)",
-                borderRadius: "1.5rem",
-                overflow: "hidden",
-                transition: "transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease",
-              }}
-              onMouseEnter={e => {
-                const el = e.currentTarget as HTMLElement;
-                el.style.transform = "translateY(-4px)";
-                el.style.boxShadow = "0 16px 56px rgba(0,0,0,0.6), 0 0 0 1px rgba(34,211,238,0.14), 0 0 32px rgba(34,211,238,0.07)";
-                el.style.borderColor = "rgba(34,211,238,0.14)";
-              }}
-              onMouseLeave={e => {
-                const el = e.currentTarget as HTMLElement;
-                el.style.transform = "translateY(0)";
-                el.style.boxShadow = "0 8px 40px rgba(0,0,0,0.55), 0 0 0 0.5px rgba(34,211,238,0.04)";
-                el.style.borderColor = "rgba(255,255,255,0.08)";
-              }}
-            >
-              {/* ── Avatar ─────────────────────────────────────────────── */}
-              <div className="relative overflow-hidden">
-                {/* Subtle ring overlay on the image */}
-                <div
-                  className="absolute inset-0 z-10 pointer-events-none rounded-t-[1.5rem]"
-                  style={{ boxShadow: "inset 0 0 0 1px rgba(34,211,238,0.12)" }}
-                />
-                <img
-                  src={`${import.meta.env.BASE_URL}images/avatar.png`}
-                  alt="Fares Salah"
-                  loading="lazy"
-                  className="
-                    w-full aspect-square object-cover
-                    grayscale opacity-75
-                    group-hover/card:grayscale-0 group-hover/card:opacity-95
-                    transition-[filter,opacity] duration-500
-                    scale-[1.01] group-hover/card:scale-100
-                  "
-                />
-                {/* Cyan colour-wash on card hover */}
-                <div className="
-                  absolute inset-0 bg-primary/8 opacity-0
-                  group-hover/card:opacity-100
-                  transition-opacity duration-500
-                  mix-blend-overlay pointer-events-none
-                " />
-                {/* Gradient bleed into identity block */}
-                <div
-                  className="absolute bottom-0 inset-x-0 h-20 pointer-events-none"
-                  style={{ background: "linear-gradient(to top, rgba(10,15,24,0.72) 0%, transparent 100%)" }}
-                />
-              </div>
-
-              {/* ── Identity block ─────────────────────────────────────── */}
-              <div className="px-6 pb-6 pt-4" style={{ textAlign }}>
-
-                {/* Name — always Arabic, large + bold */}
-                <h1
-                  dir="rtl"
-                  style={{ textAlign: "right" }}
-                  className="text-[1.65rem] font-black tracking-tight text-white leading-tight mb-1"
-                >
-                  مهندس فارس
-                </h1>
-
-                {/* Role badge */}
-                <p
-                  className="text-sm font-medium mb-5"
-                  style={{ color: "hsl(188 86% 53%)" }}
-                >
-                  {t("Hardware Engineer & PCB Designer", "مهندس أجهزة ومصمم لوحات PCB")}
-                </p>
-
-                {/* Meta — location + email */}
-                <div className="flex flex-col gap-2 mb-5">
-                  <div
-                    className="flex items-center gap-2 text-xs"
-                    style={{
-                      color: "rgba(255,255,255,0.45)",
-                      justifyContent: isRTL ? "flex-end" : "flex-start",
-                    }}
-                  >
-                    <MapPin className="w-3 h-3 shrink-0" style={{ color: "hsl(188 86% 53% / 0.6)" }} />
-                    <span>{t("Alexandria, Egypt", "الإسكندرية، مصر")}</span>
-                  </div>
-                  <div
-                    className="flex items-center gap-2 text-xs"
-                    style={{
-                      color: "rgba(255,255,255,0.45)",
-                      justifyContent: isRTL ? "flex-end" : "flex-start",
-                    }}
-                  >
-                    <Mail className="w-3 h-3 shrink-0" style={{ color: "hsl(188 86% 53% / 0.6)" }} />
-                    <span>fares@infinitytech.dev</span>
-                  </div>
-                </div>
-
-                {/* Short bio */}
-                <p
-                  className="text-xs leading-relaxed mb-6"
-                  style={{ color: "rgba(255,255,255,0.38)", textAlign }}
-                >
-                  {t(
-                    "Specialising in the full hardware stack — from schematic capture and multi-layer PCB layout to bare-metal firmware and real-time control systems.",
-                    "متخصص في المكدس الكامل للأجهزة — من رسم المخططات وتصميم لوحات PCB متعددة الطبقات إلى البرمجيات الثابتة وأنظمة التحكم الآني.",
-                  )}
-                </p>
-
-                {/* ── Single CTA: تواصل ───────────────────────────────── */}
-                <Link
-                  href="/contact"
-                  className="
-                    block w-full py-3 rounded-xl
-                    text-center text-sm font-bold tracking-wide
-                    text-primary-foreground
-                    transition-all duration-250
-                    active:scale-[0.97]
-                  "
-                  style={{
-                    background: "hsl(188 86% 53%)",
-                    boxShadow: "0 0 0 0 rgba(34,211,238,0)",
-                    transition: "background 0.2s ease, box-shadow 0.25s ease, transform 0.15s ease",
-                  }}
-                  onMouseEnter={e => {
-                    (e.currentTarget as HTMLElement).style.background = "hsl(188 86% 47%)";
-                    (e.currentTarget as HTMLElement).style.boxShadow = "0 0 22px rgba(34,211,238,0.42), 0 4px 12px rgba(0,0,0,0.3)";
-                  }}
-                  onMouseLeave={e => {
-                    (e.currentTarget as HTMLElement).style.background = "hsl(188 86% 53%)";
-                    (e.currentTarget as HTMLElement).style.boxShadow = "0 0 0 0 rgba(34,211,238,0)";
-                  }}
-                >
-                  تواصل
-                </Link>
-              </div>
-            </div>
+          {/* ══ SIDEBAR — hard 300px, shrink disabled ═══════════════════════ */}
+          <div
+            className="w-full lg:sticky lg:top-24 lg:self-start"
+            style={{ flexShrink: 0, flexBasis: "300px", minWidth: "300px", maxWidth: "300px" }}
+          >
+            <ProfileCard t={t} />
           </div>
 
-          {/* ══ RIGHT SCROLLABLE CONTENT ══════════════════════════════════════ */}
-          <div className="lg:col-span-8 space-y-10 lg:space-y-14">
+          {/* ══ MAIN CONTENT — takes remaining space ════════════════════════ */}
+          <div className="flex-1 min-w-0 space-y-10 lg:space-y-14">
 
             {/* Philosophy */}
             <FadeSection delay={60}>
