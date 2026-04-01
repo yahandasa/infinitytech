@@ -26,7 +26,7 @@ function useFadeIn() {
     if (!el) return;
     const observer = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect(); } },
-      { threshold: 0.1 },
+      { threshold: 0.08 },
     );
     observer.observe(el);
     return () => observer.disconnect();
@@ -35,8 +35,6 @@ function useFadeIn() {
   return { ref, visible };
 }
 
-// ─── Section wrapper with fade-in ────────────────────────────────────────────
-
 function FadeSection({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
   const { ref, visible } = useFadeIn();
   return (
@@ -44,8 +42,8 @@ function FadeSection({ children, delay = 0 }: { children: React.ReactNode; delay
       ref={ref}
       style={{
         opacity: visible ? 1 : 0,
-        transform: visible ? "translateY(0)" : "translateY(16px)",
-        transition: `opacity 0.5s ease ${delay}ms, transform 0.5s ease ${delay}ms`,
+        transform: visible ? "translateY(0)" : "translateY(18px)",
+        transition: `opacity 0.55s ease ${delay}ms, transform 0.55s ease ${delay}ms`,
       }}
     >
       {children}
@@ -53,25 +51,23 @@ function FadeSection({ children, delay = 0 }: { children: React.ReactNode; delay
   );
 }
 
-// ─── Skill tag with hover glow ────────────────────────────────────────────────
+// ─── Skill tag ────────────────────────────────────────────────────────────────
 
 function SkillTag({ label }: { label: string }) {
   return (
-    <span
-      className="
-        px-3 py-1.5 text-xs font-medium rounded-lg
-        bg-background border border-border text-muted-foreground
-        transition-all duration-200 cursor-default select-none
-        hover:border-primary/40 hover:bg-primary/5 hover:text-primary
-        hover:shadow-[0_0_8px_rgba(34,211,238,0.15)]
-      "
-    >
+    <span className="
+      px-3 py-1.5 text-xs font-medium rounded-lg select-none cursor-default
+      bg-background border border-border text-muted-foreground
+      transition-all duration-200
+      hover:border-primary/40 hover:bg-primary/5 hover:text-primary
+      hover:shadow-[0_0_8px_rgba(34,211,238,0.15)]
+    ">
       {label}
     </span>
   );
 }
 
-// ─── Skills grid grouped by category ─────────────────────────────────────────
+// ─── Skills grid ──────────────────────────────────────────────────────────────
 
 function SkillsGrid({ skills, isRTL }: { skills: Skill[]; isRTL: boolean }) {
   const byCategory = skills.reduce<Record<string, Skill[]>>((acc, s) => {
@@ -111,7 +107,7 @@ function SkillsGrid({ skills, isRTL }: { skills: Skill[]; isRTL: boolean }) {
   );
 }
 
-// ─── Skeleton loader ──────────────────────────────────────────────────────────
+// ─── Skills skeleton ──────────────────────────────────────────────────────────
 
 function SkillsSkeleton() {
   return (
@@ -120,9 +116,7 @@ function SkillsSkeleton() {
         <div key={i} className="p-5 rounded-2xl bg-card border border-border animate-pulse">
           <div className="h-3 w-28 rounded bg-border/60 mb-4" />
           <div className="flex flex-wrap gap-2">
-            {[1, 2, 3].map(j => (
-              <div key={j} className="h-7 w-16 rounded-lg bg-border/40" />
-            ))}
+            {[1, 2, 3].map(j => <div key={j} className="h-7 w-16 rounded-lg bg-border/40" />)}
           </div>
         </div>
       ))}
@@ -130,7 +124,7 @@ function SkillsSkeleton() {
   );
 }
 
-// ─── Main About page ──────────────────────────────────────────────────────────
+// ─── Main page ────────────────────────────────────────────────────────────────
 
 export function About() {
   const { t, isRTL } = useLanguage();
@@ -148,7 +142,7 @@ export function About() {
   const textAlign = isRTL ? "right" : "left";
 
   return (
-    <div className="min-h-screen w-full pt-20 sm:pt-28 pb-16 sm:pb-24">
+    <div className="min-h-screen w-full pt-20 sm:pt-24 pb-20 sm:pb-32">
       <SEO
         title={t("About — Fares Salah", "عن — فارس صلاح")}
         description={t(
@@ -159,74 +153,119 @@ export function About() {
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
+        {/*
+         * items-start is required so the sticky left column can work correctly.
+         * Without it the grid items stretch to the same height and sticky never
+         * has anywhere to scroll within.
+         */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 lg:items-start">
 
-          {/* ── Left column: avatar + bio ─────────────────────────────── */}
-          <div className="lg:col-span-4">
-            <FadeSection>
-              <div className="space-y-6">
-                {/* Avatar */}
-                <div className="
-                  w-full max-h-[260px] sm:max-h-[340px] lg:max-h-none
-                  aspect-square rounded-2xl sm:rounded-3xl overflow-hidden
-                  border border-border bg-card relative group
-                  transition-shadow duration-300
-                  hover:shadow-[0_0_30px_rgba(34,211,238,0.12)]
-                ">
-                  <img
-                    src={`${import.meta.env.BASE_URL}images/avatar.png`}
-                    alt="Fares Salah"
-                    loading="lazy"
-                    className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-[filter,opacity] duration-500"
-                  />
-                  <div className="absolute inset-0 ring-1 ring-inset ring-black/10 rounded-2xl sm:rounded-3xl" />
-                  <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 mix-blend-overlay pointer-events-none" />
+          {/* ══ LEFT STICKY SIDEBAR ═══════════════════════════════════════════ */}
+          <div className="lg:col-span-4 lg:sticky lg:top-24 lg:self-start">
+            <div
+              className="
+                rounded-2xl sm:rounded-3xl overflow-hidden
+                border border-border bg-card
+                shadow-[0_4px_32px_rgba(0,0,0,0.35)]
+              "
+            >
+              {/* Avatar */}
+              <div className="relative group overflow-hidden">
+                <img
+                  src={`${import.meta.env.BASE_URL}images/avatar.png`}
+                  alt="Fares Salah"
+                  loading="lazy"
+                  className="
+                    w-full aspect-square object-cover
+                    grayscale opacity-80
+                    group-hover:grayscale-0 group-hover:opacity-100
+                    transition-[filter,opacity] duration-500
+                  "
+                />
+                {/* Cyan overlay on hover */}
+                <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 mix-blend-overlay pointer-events-none" />
+                {/* Bottom fade into card */}
+                <div className="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-card to-transparent" />
+              </div>
+
+              {/* Identity block */}
+              <div className="px-5 pb-5 pt-3" style={{ textAlign }}>
+                {/* Primary name — always Arabic as requested */}
+                <h1 className="text-2xl font-black tracking-tight text-foreground leading-tight mb-0.5" dir="rtl" style={{ textAlign: "right" }}>
+                  مهندس فارس
+                </h1>
+                <p className="text-primary font-medium text-sm mb-4">
+                  {t("Hardware Engineer & PCB Designer", "مهندس أجهزة ومصمم لوحات PCB")}
+                </p>
+
+                {/* Meta */}
+                <div className="flex flex-col gap-1.5 mb-5">
+                  <div
+                    className="flex items-center gap-2 text-muted-foreground text-xs"
+                    style={{ justifyContent: isRTL ? "flex-end" : "flex-start" }}
+                  >
+                    <MapPin className="w-3 h-3 shrink-0 text-primary/60" />
+                    <span>{t("Alexandria, Egypt", "الإسكندرية، مصر")}</span>
+                  </div>
+                  <div
+                    className="flex items-center gap-2 text-muted-foreground text-xs"
+                    style={{ justifyContent: isRTL ? "flex-end" : "flex-start" }}
+                  >
+                    <Mail className="w-3 h-3 shrink-0 text-primary/60" />
+                    <span>fares@infinitytech.dev</span>
+                  </div>
                 </div>
 
-                {/* Bio */}
-                <div style={{ textAlign }}>
-                  <h1 className="text-3xl sm:text-4xl font-black tracking-tighter text-foreground mb-1">
-                    eng. Fares Salah
-                  </h1>
-                  <p className="text-primary font-medium text-sm sm:text-base mb-4">
-                    {t("Hardware Engineer & PCB Designer", "مهندس أجهزة ومصمم لوحات PCB")}
-                  </p>
+                <p className="text-xs text-muted-foreground leading-relaxed mb-5">
+                  {t(
+                    "Specialising in the full hardware stack — from schematic capture and multi-layer PCB layout to bare-metal firmware and real-time control systems.",
+                    "متخصص في المكدس الكامل للأجهزة — من رسم المخططات وتصميم لوحات PCB متعددة الطبقات إلى البرمجيات الثابتة وأنظمة التحكم الآني.",
+                  )}
+                </p>
 
-                  {/* Meta */}
-                  <div className="flex flex-col gap-2 mb-5">
-                    <div className="flex items-center gap-2 text-muted-foreground text-sm" style={{ justifyContent: isRTL ? "flex-end" : "flex-start" }}>
-                      <MapPin className="w-3.5 h-3.5 shrink-0 text-primary/70" />
-                      <span>{t("Alexandria, Egypt", "الإسكندرية، مصر")}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-muted-foreground text-sm" style={{ justifyContent: isRTL ? "flex-end" : "flex-start" }}>
-                      <Mail className="w-3.5 h-3.5 shrink-0 text-primary/70" />
-                      <span>fares@infinitytech.dev</span>
-                    </div>
-                  </div>
-
-                  <p className="text-sm text-muted-foreground leading-relaxed mb-6">
-                    {t(
-                      "Specialising in the full hardware stack — from schematic capture and multi-layer PCB layout to bare-metal firmware and real-time control systems.",
-                      "متخصص في المكدس الكامل للأجهزة — من رسم المخططات وتصميم لوحات PCB متعددة الطبقات إلى البرمجيات الثابتة وأنظمة التحكم الآني.",
-                    )}
-                  </p>
-
+                {/* ── CTA buttons ────────────────────────────────────────── */}
+                <div className="flex gap-2.5">
+                  {/* Primary: تواصل — solid cyan */}
                   <Link
                     href="/contact"
-                    className="inline-block w-full py-3 bg-primary text-primary-foreground text-center text-sm font-semibold rounded-xl hover:bg-primary/90 transition-colors"
+                    className="
+                      flex-1 py-2.5 rounded-xl text-center text-sm font-bold
+                      bg-primary text-primary-foreground
+                      transition-all duration-200
+                      hover:bg-primary/90
+                      hover:shadow-[0_0_18px_rgba(34,211,238,0.35)]
+                      active:scale-[0.97]
+                    "
                   >
-                    {t("Get in Touch", "تواصل معي")}
+                    تواصل
+                  </Link>
+
+                  {/* Secondary: البورتفوليو — glassmorphism outline */}
+                  <Link
+                    href="/projects"
+                    className="
+                      flex-1 py-2.5 rounded-xl text-center text-sm font-bold
+                      bg-white/5 backdrop-blur-sm
+                      border border-white/12
+                      text-foreground/80
+                      transition-all duration-200
+                      hover:bg-white/10 hover:border-primary/30 hover:text-primary
+                      hover:shadow-[0_0_12px_rgba(34,211,238,0.12)]
+                      active:scale-[0.97]
+                    "
+                  >
+                    البورتفوليو
                   </Link>
                 </div>
               </div>
-            </FadeSection>
+            </div>
           </div>
 
-          {/* ── Right column: philosophy + skills ──────────────────────── */}
+          {/* ══ RIGHT SCROLLABLE CONTENT ══════════════════════════════════════ */}
           <div className="lg:col-span-8 space-y-10 lg:space-y-14">
 
             {/* Philosophy */}
-            <FadeSection delay={80}>
+            <FadeSection delay={60}>
               <section style={{ textAlign }}>
                 <p className="text-[11px] font-semibold text-primary uppercase tracking-[0.2em] mb-3">
                   {t("Philosophy", "الفلسفة")}
@@ -272,10 +311,10 @@ export function About() {
               </section>
             </FadeSection>
 
-            <div className="h-px bg-border/50" />
+            <div className="h-px bg-border/40" />
 
-            {/* Skills */}
-            <FadeSection delay={160}>
+            {/* Technical Arsenal */}
+            <FadeSection delay={140}>
               <section>
                 <div style={{ textAlign }} className="mb-6 sm:mb-8">
                   <p className="text-[11px] font-semibold text-primary uppercase tracking-[0.2em] mb-3">
