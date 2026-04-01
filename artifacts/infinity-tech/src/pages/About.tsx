@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
-import { ArrowRight, Cpu, Layers, Zap, Bot } from "lucide-react";
+import {
+  ArrowRight, Cpu, Layers, Zap, Bot,
+  MapPin, Mail,
+} from "lucide-react";
 import { SEO } from "@/components/SEO";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -17,7 +20,7 @@ interface Skill {
 
 // ─── Intersection-observer fade-in ───────────────────────────────────────────
 
-function useFadeIn(threshold = 0.08) {
+function useFadeIn(threshold = 0.07) {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
   useEffect(() => {
@@ -33,11 +36,7 @@ function useFadeIn(threshold = 0.08) {
   return { ref, visible };
 }
 
-function Reveal({
-  children,
-  delay = 0,
-  className = "",
-}: {
+function Reveal({ children, delay = 0, className = "" }: {
   children: React.ReactNode;
   delay?: number;
   className?: string;
@@ -49,8 +48,8 @@ function Reveal({
       className={className}
       style={{
         opacity: visible ? 1 : 0,
-        transform: visible ? "translateY(0)" : "translateY(22px)",
-        transition: `opacity 0.6s ease ${delay}ms, transform 0.6s ease ${delay}ms`,
+        transform: visible ? "translateY(0)" : "translateY(20px)",
+        transition: `opacity 0.55s ease ${delay}ms, transform 0.55s ease ${delay}ms`,
       }}
     >
       {children}
@@ -58,41 +57,66 @@ function Reveal({
   );
 }
 
-// ─── Section label ────────────────────────────────────────────────────────────
+// ─── Section eyebrow label ────────────────────────────────────────────────────
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
+function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
     <p
-      className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.22em] mb-3"
+      className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.22em] mb-4"
       style={{ color: "hsl(188 86% 53%)" }}
     >
-      <span
-        className="inline-block w-4 h-px"
-        style={{ background: "hsl(188 86% 53%)" }}
-      />
+      <span className="w-5 h-px" style={{ background: "hsl(188 86% 53%)" }} />
       {children}
     </p>
   );
 }
 
-// ─── Divider ─────────────────────────────────────────────────────────────────
+// ─── Section divider ─────────────────────────────────────────────────────────
 
 function Divider() {
   return (
     <div
-      className="w-full h-px my-20 sm:my-28"
-      style={{ background: "linear-gradient(to right, transparent, rgba(255,255,255,0.07) 30%, rgba(255,255,255,0.07) 70%, transparent)" }}
+      className="w-full h-px my-20 sm:my-24"
+      style={{
+        background:
+          "linear-gradient(to right, transparent, rgba(255,255,255,0.07) 30%, rgba(255,255,255,0.07) 70%, transparent)",
+      }}
     />
   );
 }
 
 // ─── Skill category card ──────────────────────────────────────────────────────
+/*
+ * Layout guarantee: every card is a flex column with the tags pushed to the
+ * bottom via flex-grow on the description area.  A hard min-height prevents
+ * cards from shrinking when Arabic text is shorter than English (or vice-versa).
+ */
 
-const CATEGORY_ICONS: Record<string, React.ReactNode> = {
-  "Hardware & PCB": <Layers className="w-4 h-4" />,
-  "Embedded Firmware": <Cpu className="w-4 h-4" />,
-  "Robotics & Systems": <Bot className="w-4 h-4" />,
-  "Tools": <Zap className="w-4 h-4" />,
+const CATEGORY_META: Record<string, {
+  icon: React.ReactNode;
+  descEn: string;
+  descAr: string;
+}> = {
+  "Hardware & PCB": {
+    icon: <Layers className="w-5 h-5" />,
+    descEn: "Multi-layer PCB design, signal integrity, and component selection for high-density boards.",
+    descAr: "تصميم لوحات PCB متعددة الطبقات، سلامة الإشارة، واختيار المكونات للوحات عالية الكثافة.",
+  },
+  "Embedded Firmware": {
+    icon: <Cpu className="w-5 h-5" />,
+    descEn: "Bare-metal C/C++, RTOS scheduling, DMA pipelines, and interrupt-driven architectures.",
+    descAr: "C/C++ على المستوى المنخفض، جدولة RTOS، تعامل DMA، وبنيات مبنية على المقاطعات.",
+  },
+  "Robotics & Systems": {
+    icon: <Bot className="w-5 h-5" />,
+    descEn: "Real-time control loops, sensor fusion, motor drivers, and autonomous navigation.",
+    descAr: "حلقات تحكم آني، دمج حساسات، مشغّلات محركات، وملاحة مستقلة.",
+  },
+  "Tools": {
+    icon: <Zap className="w-5 h-5" />,
+    descEn: "EDA tools, version control, CI/CD pipelines, and simulation environments.",
+    descAr: "أدوات EDA، التحكم في الإصدارات، خطوط CI/CD، وبيئات المحاكاة.",
+  },
 };
 
 function SkillCard({
@@ -106,59 +130,66 @@ function SkillCard({
   isRTL: boolean;
   delay: number;
 }) {
+  const meta = CATEGORY_META[category];
+  const icon  = meta?.icon  ?? <Zap className="w-5 h-5" />;
+  const desc  = isRTL ? (meta?.descAr ?? meta?.descEn ?? "") : (meta?.descEn ?? "");
+
   return (
-    <Reveal delay={delay}>
+    <Reveal delay={delay} className="h-full">
       <div
-        className="h-full p-6 rounded-2xl transition-all duration-300 cursor-default"
+        className="flex flex-col h-full rounded-2xl p-6 cursor-default"
         style={{
-          background: "rgba(255,255,255,0.03)",
+          background: "rgba(255,255,255,0.025)",
           border: "1px solid rgba(255,255,255,0.07)",
-          transition: "border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease",
+          minHeight: "260px",          /* fixed — prevents EN↔AR size jitter */
+          transition: "border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease",
         }}
         onMouseEnter={e => {
           const el = e.currentTarget as HTMLElement;
-          el.style.borderColor = "rgba(34,211,238,0.2)";
-          el.style.boxShadow = "0 0 28px rgba(34,211,238,0.06)";
+          el.style.borderColor = "rgba(34,211,238,0.22)";
+          el.style.boxShadow = "0 0 32px rgba(34,211,238,0.07)";
           el.style.background = "rgba(34,211,238,0.03)";
         }}
         onMouseLeave={e => {
           const el = e.currentTarget as HTMLElement;
           el.style.borderColor = "rgba(255,255,255,0.07)";
           el.style.boxShadow = "none";
-          el.style.background = "rgba(255,255,255,0.03)";
+          el.style.background = "rgba(255,255,255,0.025)";
         }}
       >
-        {/* Icon + category */}
+        {/* Icon */}
         <div
-          className="flex items-center gap-2.5 mb-5"
-          style={{ justifyContent: "start" }}
+          className="w-10 h-10 rounded-xl flex items-center justify-center mb-4 flex-shrink-0"
+          style={{ background: "rgba(34,211,238,0.1)", color: "hsl(188 86% 53%)" }}
         >
-          <span
-            className="p-2 rounded-lg"
-            style={{
-              color: "hsl(188 86% 53%)",
-              background: "rgba(34,211,238,0.1)",
-            }}
-          >
-            {CATEGORY_ICONS[category] ?? <Zap className="w-4 h-4" />}
-          </span>
-          <h3
-            className="text-xs font-bold uppercase tracking-[0.16em]"
-            style={{ color: "rgba(255,255,255,0.55)" }}
-          >
-            {category}
-          </h3>
+          {icon}
         </div>
 
-        {/* Tags */}
-        <div className="flex flex-wrap gap-2">
+        {/* Title */}
+        <h3
+          className="text-sm font-bold text-white mb-2"
+          style={{ lineHeight: 1.3 }}
+        >
+          {category}
+        </h3>
+
+        {/* Description — flex-grow so tags always sit at the bottom */}
+        <p
+          className="text-xs leading-relaxed flex-grow mb-4"
+          style={{ color: "rgba(255,255,255,0.4)" }}
+        >
+          {desc}
+        </p>
+
+        {/* Tech tags */}
+        <div className="flex flex-wrap gap-1.5">
           {items.map(s => (
             <span
               key={s.id}
-              className="px-2.5 py-1 text-[11px] font-medium rounded-md select-none"
+              className="px-2 py-1 text-[11px] font-medium rounded-md select-none"
               style={{
                 background: "rgba(255,255,255,0.06)",
-                color: "rgba(255,255,255,0.7)",
+                color: "rgba(255,255,255,0.65)",
                 border: "1px solid rgba(255,255,255,0.08)",
               }}
             >
@@ -180,16 +211,20 @@ function SkillsSkeleton() {
         <div
           key={i}
           className="p-6 rounded-2xl animate-pulse"
-          style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}
+          style={{
+            background: "rgba(255,255,255,0.025)",
+            border: "1px solid rgba(255,255,255,0.07)",
+            minHeight: "260px",
+          }}
         >
-          <div className="flex items-center gap-2 mb-5">
-            <div className="w-8 h-8 rounded-lg bg-white/5" />
-            <div className="h-2.5 w-24 rounded bg-white/5" />
+          <div className="w-10 h-10 rounded-xl bg-white/5 mb-4" />
+          <div className="h-3 w-28 rounded bg-white/5 mb-3" />
+          <div className="space-y-2 mb-4">
+            <div className="h-2 w-full rounded bg-white/5" />
+            <div className="h-2 w-4/5 rounded bg-white/5" />
           </div>
-          <div className="flex flex-wrap gap-2">
-            {[1, 2, 3, 4].map(j => (
-              <div key={j} className="h-6 w-14 rounded-md bg-white/5" />
-            ))}
+          <div className="flex flex-wrap gap-1.5">
+            {[1, 2, 3].map(j => <div key={j} className="h-6 w-12 rounded-md bg-white/5" />)}
           </div>
         </div>
       ))}
@@ -219,10 +254,7 @@ export function About() {
   }, {});
 
   return (
-    <div
-      className="min-h-screen w-full"
-      dir={isRTL ? "rtl" : "ltr"}
-    >
+    <div className="min-h-screen w-full" dir={isRTL ? "rtl" : "ltr"}>
       <SEO
         title={t("About — Fares Salah", "عن — فارس صلاح")}
         description={t(
@@ -233,173 +265,192 @@ export function About() {
       />
 
       {/* ════════════════════════════════════════════════════════════════════
-          §1  HERO
+          §1  INTRO — About Me
+          Two-column: profile card (fixed 300 px) + bio.
+          The card block is always dir="ltr" so it never shifts on lang toggle.
           ════════════════════════════════════════════════════════════════════ */}
-      <section className="relative flex items-center justify-center min-h-screen pt-20 pb-16 overflow-hidden">
+      <section className="max-w-7xl mx-auto px-6 sm:px-8 pt-28 sm:pt-32 pb-4">
 
-        {/* Ambient gradient background */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background:
-              "radial-gradient(ellipse 70% 55% at 50% 0%, rgba(34,211,238,0.07) 0%, transparent 70%)",
-          }}
-        />
-        {/* Grid overlay */}
-        <div
-          className="absolute inset-0 pointer-events-none opacity-[0.025]"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)",
-            backgroundSize: "40px 40px",
-          }}
-        />
+        <div className="flex flex-col lg:flex-row gap-10 lg:gap-16 lg:items-start">
 
-        <div className="relative max-w-4xl mx-auto px-6 text-center">
-
-          {/* Tag */}
-          <Reveal delay={0}>
-            <div
-              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold mb-8 tracking-wide"
-              style={{
-                border: "1px solid rgba(34,211,238,0.2)",
-                background: "rgba(34,211,238,0.06)",
-                color: "hsl(188 86% 65%)",
-              }}
-            >
-              <span
-                className="w-1.5 h-1.5 rounded-full animate-pulse"
-                style={{ background: "hsl(188 86% 53%)" }}
-              />
-              {t("Hardware Engineer & PCB Designer", "مهندس أجهزة ومصمم لوحات PCB")}
-            </div>
-          </Reveal>
-
-          {/* Headline */}
-          <Reveal delay={80}>
-            <h1 className="font-black leading-[1.08] tracking-tight text-white mb-6">
-              <span
-                className="block text-4xl sm:text-5xl lg:text-7xl"
-                style={{ fontFamily: isRTL ? "inherit" : "inherit" }}
-              >
-                {t("Building the", "أبني")}
-              </span>
-              <span
-                className="block text-4xl sm:text-5xl lg:text-7xl"
-                style={{
-                  background: "linear-gradient(135deg, hsl(188 86% 60%) 0%, hsl(200 90% 70%) 50%, hsl(220 80% 70%) 100%)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
-                }}
-              >
-                {t("Hardware of Tomorrow", "أجهزة الغد")}
-              </span>
-            </h1>
-          </Reveal>
-
-          {/* Subheadline */}
-          <Reveal delay={160}>
-            <p
-              className="text-base sm:text-lg leading-relaxed mx-auto mb-10"
-              style={{ color: "rgba(255,255,255,0.5)", maxWidth: "560px" }}
-            >
-              {t(
-                "From silicon-level PCB design to real-time firmware — I build the systems that make intelligent machines work.",
-                "من تصميم لوحات PCB على مستوى السيليكون إلى البرمجيات الآنية — أبني الأنظمة التي تجعل الآلات الذكية تعمل.",
-              )}
-            </p>
-          </Reveal>
-
-          {/* CTA */}
-          <Reveal delay={240}>
-            <div className="flex items-center justify-center gap-4 flex-wrap">
-              <Link
-                href="/contact"
-                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-bold text-white transition-all duration-200 active:scale-[0.97]"
-                style={{
-                  background: "hsl(188 86% 53%)",
-                  boxShadow: "0 0 0 0 rgba(34,211,238,0)",
-                  color: "#0a0f18",
-                  transition: "background 0.2s ease, box-shadow 0.25s ease",
-                }}
-                onMouseEnter={e => {
-                  const el = e.currentTarget as HTMLElement;
-                  el.style.background = "hsl(188 86% 47%)";
-                  el.style.boxShadow = "0 0 28px rgba(34,211,238,0.4), 0 4px 16px rgba(0,0,0,0.3)";
-                }}
-                onMouseLeave={e => {
-                  const el = e.currentTarget as HTMLElement;
-                  el.style.background = "hsl(188 86% 53%)";
-                  el.style.boxShadow = "0 0 0 0 rgba(34,211,238,0)";
-                }}
-              >
-                {t("Start a Project", "ابدأ مشروعًا")}
-                <ArrowRight className="w-4 h-4" style={{ transform: isRTL ? "scaleX(-1)" : "none" }} />
-              </Link>
-              <Link
-                href="/projects"
-                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-bold transition-all duration-200 active:scale-[0.97]"
-                style={{
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  color: "rgba(255,255,255,0.7)",
-                  background: "rgba(255,255,255,0.04)",
-                  transition: "border-color 0.2s ease, color 0.2s ease, background 0.2s ease",
-                }}
-                onMouseEnter={e => {
-                  const el = e.currentTarget as HTMLElement;
-                  el.style.borderColor = "rgba(34,211,238,0.25)";
-                  el.style.color = "hsl(188 86% 65%)";
-                  el.style.background = "rgba(34,211,238,0.05)";
-                }}
-                onMouseLeave={e => {
-                  const el = e.currentTarget as HTMLElement;
-                  el.style.borderColor = "rgba(255,255,255,0.1)";
-                  el.style.color = "rgba(255,255,255,0.7)";
-                  el.style.background = "rgba(255,255,255,0.04)";
-                }}
-              >
-                {t("View Portfolio", "عرض الأعمال")}
-              </Link>
-            </div>
-          </Reveal>
-
-          {/* Scroll indicator */}
-          <Reveal delay={400}>
-            <div className="mt-20 flex justify-center">
+          {/* ── Profile card — fixed 300 px column ────────────────────── */}
+          <Reveal delay={0} className="w-full lg:w-[300px] lg:flex-shrink-0">
+            <div style={{ maxWidth: "300px", width: "100%", margin: "0 auto" }}>
               <div
-                className="flex flex-col items-center gap-2 opacity-30"
-                style={{ color: "white" }}
+                className="overflow-hidden rounded-2xl"
+                style={{
+                  background: "rgba(10,15,24,0.72)",
+                  backdropFilter: "blur(12px)",
+                  WebkitBackdropFilter: "blur(12px)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  boxShadow: "0 16px 56px rgba(0,0,0,0.5)",
+                  transition: "box-shadow 0.3s ease, border-color 0.3s ease, transform 0.3s ease",
+                }}
+                onMouseEnter={e => {
+                  const el = e.currentTarget as HTMLElement;
+                  el.style.transform = "translateY(-3px)";
+                  el.style.boxShadow = "0 24px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(34,211,238,0.12)";
+                  el.style.borderColor = "rgba(34,211,238,0.14)";
+                }}
+                onMouseLeave={e => {
+                  const el = e.currentTarget as HTMLElement;
+                  el.style.transform = "translateY(0)";
+                  el.style.boxShadow = "0 16px 56px rgba(0,0,0,0.5)";
+                  el.style.borderColor = "rgba(255,255,255,0.08)";
+                }}
               >
-                <div
-                  className="w-px h-10 rounded-full"
-                  style={{
-                    background: "linear-gradient(to bottom, transparent, rgba(255,255,255,0.5))",
-                    animation: "pulse 2s ease-in-out infinite",
-                  }}
-                />
+                {/* Avatar */}
+                <div className="relative overflow-hidden">
+                  <div
+                    className="absolute inset-0 z-10 pointer-events-none"
+                    style={{ boxShadow: "inset 0 0 0 1px rgba(34,211,238,0.1)" }}
+                  />
+                  <img
+                    src={`${import.meta.env.BASE_URL}images/avatar.png`}
+                    alt="Eng. Fares Salah"
+                    loading="eager"
+                    className="w-full aspect-square object-cover grayscale opacity-75 hover:grayscale-0 hover:opacity-95 transition-[filter,opacity] duration-500"
+                  />
+                  <div
+                    className="absolute bottom-0 inset-x-0 h-20 pointer-events-none"
+                    style={{ background: "linear-gradient(to top, rgba(10,15,24,0.85), transparent)" }}
+                  />
+                </div>
+
+                {/* Identity — always LTR, immune to language toggle */}
+                <div className="px-6 pb-6 pt-4" dir="ltr" style={{ textAlign: "left" }}>
+                  <h1
+                    className="font-mono font-bold text-white leading-tight mb-1"
+                    style={{ fontSize: "1.2rem", letterSpacing: "-0.01em" }}
+                  >
+                    Eng. Fares Salah
+                  </h1>
+                  <p
+                    className="text-sm font-medium mb-4"
+                    style={{ color: "hsl(188 86% 53%)" }}
+                  >
+                    Hardware Engineer & PCB Designer
+                  </p>
+                  <div className="flex flex-col gap-2 mb-5">
+                    <div className="flex items-center gap-2 text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
+                      <MapPin className="w-3 h-3 shrink-0" style={{ color: "hsl(188 86% 53% / 0.6)" }} />
+                      <span>Alexandria, Egypt</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
+                      <Mail className="w-3 h-3 shrink-0" style={{ color: "hsl(188 86% 53% / 0.6)" }} />
+                      <span>fares@infinitytech.dev</span>
+                    </div>
+                  </div>
+                  <Link
+                    href="/contact"
+                    className="block w-full py-2.5 rounded-xl text-center text-sm font-bold active:scale-[0.97]"
+                    style={{
+                      background: "hsl(188 86% 53%)",
+                      color: "#0a0f18",
+                      transition: "background 0.2s ease, box-shadow 0.25s ease",
+                    }}
+                    onMouseEnter={e => {
+                      const el = e.currentTarget as HTMLElement;
+                      el.style.background = "hsl(188 86% 47%)";
+                      el.style.boxShadow = "0 0 20px rgba(34,211,238,0.4)";
+                    }}
+                    onMouseLeave={e => {
+                      const el = e.currentTarget as HTMLElement;
+                      el.style.background = "hsl(188 86% 53%)";
+                      el.style.boxShadow = "none";
+                    }}
+                  >
+                    {t("Contact", "تواصل")}
+                  </Link>
+                </div>
               </div>
             </div>
           </Reveal>
+
+          {/* ── Bio ───────────────────────────────────────────────────── */}
+          <div className="flex-1 min-w-0 space-y-7 lg:pt-2">
+
+            <Reveal delay={80}>
+              <Eyebrow>{t("About Me", "عني")}</Eyebrow>
+              <h2
+                className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight"
+                style={{ marginTop: "4px" }}
+              >
+                {t(
+                  <>Engineer by passion,<br />builder by nature.</>,
+                  <>مهندس بالشغف،<br />مبتكر بالطبيعة.</>,
+                )}
+              </h2>
+            </Reveal>
+
+            <Reveal delay={160}>
+              <p className="text-base leading-relaxed" style={{ color: "rgba(255,255,255,0.55)" }}>
+                {t(
+                  "I'm a hardware engineer based in Alexandria, specialising in the full electronics stack — from silicon-level schematic capture and multi-layer PCB design, through bare-metal firmware, to real-time robotic control systems.",
+                  "أنا مهندس أجهزة مقيم في الإسكندرية، متخصص في المكدس الإلكتروني الكامل — من رسم المخططات على مستوى السيليكون وتصميم لوحات PCB متعددة الطبقات، وصولاً إلى البرمجيات المدمجة وأنظمة التحكم الروبوتي الآني.",
+                )}
+              </p>
+            </Reveal>
+
+            <Reveal delay={220}>
+              <p className="text-base leading-relaxed" style={{ color: "rgba(255,255,255,0.55)" }}>
+                {t(
+                  "My philosophy is first-principles design: understand the system from the substrate up, then build with precision. Constraints are fuel — not obstacles.",
+                  "فلسفتي هي التصميم من المبادئ الأولى: فهم النظام من الطبقة الأساسية، ثم البناء بدقة. القيود وقود — ليست عوائق.",
+                )}
+              </p>
+            </Reveal>
+
+            {/* Stats row */}
+            <Reveal delay={300}>
+              <div
+                className="grid grid-cols-3 gap-4 pt-5"
+                style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}
+              >
+                {[
+                  { value: "5+", labelEn: "Years",    labelAr: "سنوات" },
+                  { value: "30+", labelEn: "Projects", labelAr: "مشروع" },
+                  { value: "4",   labelEn: "Domains",  labelAr: "مجالات" },
+                ].map((stat) => (
+                  <div key={stat.value} className="text-center">
+                    <p
+                      className="text-2xl sm:text-3xl font-black mb-0.5"
+                      style={{ color: "hsl(188 86% 53%)" }}
+                    >
+                      {stat.value}
+                    </p>
+                    <p
+                      className="text-[11px] font-semibold uppercase tracking-widest"
+                      style={{ color: "rgba(255,255,255,0.35)" }}
+                    >
+                      {isRTL ? stat.labelAr : stat.labelEn}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </Reveal>
+          </div>
         </div>
       </section>
 
       {/* ════════════════════════════════════════════════════════════════════
           §2  SKILLS / TECH STACK
+          Fixed-height cards: icon + title + description + tags.
+          min-height on each card prevents EN↔AR size jitter.
           ════════════════════════════════════════════════════════════════════ */}
       <section className="max-w-7xl mx-auto px-6 sm:px-8">
         <Divider />
 
         <Reveal delay={0}>
-          <div className="mb-12 sm:mb-16">
-            <SectionLabel>{t("Tech Stack", "المكدس التقني")}</SectionLabel>
-            <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight mt-1">
+          <div className="mb-10 sm:mb-12">
+            <Eyebrow>{t("Tech Stack", "المكدس التقني")}</Eyebrow>
+            <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight mt-1 mb-3">
               {t("Technical Arsenal", "الترسانة التقنية")}
             </h2>
-            <p className="mt-4 text-base" style={{ color: "rgba(255,255,255,0.45)", maxWidth: "500px" }}>
+            <p className="text-base" style={{ color: "rgba(255,255,255,0.4)", maxWidth: "480px" }}>
               {t(
-                "Four domains, one system. Every tool chosen for precision.",
-                "أربعة مجالات، منظومة واحدة. كل أداة مختارة للدقة.",
+                "Four domains. Every tool chosen for precision and real-world performance.",
+                "أربعة مجالات. كل أداة مختارة للدقة والأداء في العالم الحقيقي.",
               )}
             </p>
           </div>
@@ -412,14 +463,14 @@ export function About() {
             {t("No skills listed yet.", "لم يتم إضافة مهارات بعد.")}
           </p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 items-stretch">
             {Object.entries(byCategory).map(([category, items], i) => (
               <SkillCard
                 key={category}
                 category={category}
                 items={items}
                 isRTL={isRTL}
-                delay={i * 80}
+                delay={i * 70}
               />
             ))}
           </div>
@@ -427,21 +478,26 @@ export function About() {
       </section>
 
       {/* ════════════════════════════════════════════════════════════════════
-          §4  VISION
+          §3  VISION
+          Single clean paragraph + icon-bullet list.
+          The 2×2 feature grid is replaced with an icon list for clarity.
           ════════════════════════════════════════════════════════════════════ */}
       <section className="max-w-7xl mx-auto px-6 sm:px-8">
         <Divider />
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-start">
 
-          {/* Text */}
+          {/* Text column */}
           <div className="space-y-6">
             <Reveal delay={0}>
-              <SectionLabel>{t("Vision", "الرؤية")}</SectionLabel>
-              <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight mt-1">
+              <Eyebrow>{t("Vision", "الرؤية")}</Eyebrow>
+              <h2
+                className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight"
+                style={{ marginTop: "4px" }}
+              >
                 {t(
-                  "The future is physical — and programmable.",
-                  "المستقبل مادي — وقابل للبرمجة.",
+                  <>The future is physical —<br />and programmable.</>,
+                  <>المستقبل مادي —<br />وقابل للبرمجة.</>,
                 )}
               </h2>
             </Reveal>
@@ -449,8 +505,8 @@ export function About() {
             <Reveal delay={100}>
               <p className="text-base leading-relaxed" style={{ color: "rgba(255,255,255,0.55)" }}>
                 {t(
-                  "The next paradigm shift isn't just in software — it's in how software interacts with the physical world. Intelligent machines need nervous systems: sensors, actuators, real-time control, and power-optimised silicon.",
-                  "التحول النموذجي القادم ليس في البرمجيات وحدها — بل في كيفية تفاعل البرمجيات مع العالم المادي. تحتاج الآلات الذكية إلى أنظمة عصبية: مستشعرات، مشغّلات، تحكم آني، وسيليكون مُحسَّن للطاقة.",
+                  "The next paradigm shift isn't just in software — it's in how software interacts with the physical world. Intelligent machines need nervous systems built with precision, from the silicon up.",
+                  "التحول النموذجي القادم ليس في البرمجيات وحدها — بل في كيفية تفاعل البرمجيات مع العالم المادي. تحتاج الآلات الذكية إلى أنظمة عصبية مبنية بدقة، من السيليكون إلى الأعلى.",
                 )}
               </p>
             </Reveal>
@@ -458,76 +514,53 @@ export function About() {
             <Reveal delay={180}>
               <p className="text-base leading-relaxed" style={{ color: "rgba(255,255,255,0.55)" }}>
                 {t(
-                  "My goal with Infinity is to push that boundary — building systems where software and hardware are co-designed from the ground up, optimised together, and deployed with confidence.",
-                  "هدفي مع إنفينيتي هو دفع هذا الحد — بناء أنظمة يُصمَّم فيها البرنامج والأجهزة معاً من الصفر، مُحسَّنان معاً، ومُنشَران بثقة.",
+                  "With Infinity, my goal is to co-design hardware and software from the ground up — optimised together, deployed with confidence.",
+                  "مع إنفينيتي، هدفي هو تصميم الأجهزة والبرمجيات معاً من الصفر — مُحسَّنان معاً، ومُنشَران بثقة.",
                 )}
               </p>
             </Reveal>
-
-            <Reveal delay={260}>
-              <div
-                className="flex flex-col gap-3 pt-2"
-              >
-                {[
-                  t("Co-designed hardware + firmware architectures", "بنيات أجهزة وبرمجيات مُصمَّمة معاً"),
-                  t("Power-aware embedded systems", "أنظمة مدمجة واعية بالطاقة"),
-                  t("Real-time robotics & autonomous control", "روبوتيات آنية وتحكم مستقل"),
-                ].map((item, i) => (
-                  <div key={i} className="flex items-start gap-3">
-                    <span
-                      className="mt-1.5 w-1.5 h-1.5 rounded-full shrink-0"
-                      style={{ background: "hsl(188 86% 53%)" }}
-                    />
-                    <span className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>{item}</span>
-                  </div>
-                ))}
-              </div>
-            </Reveal>
           </div>
 
-          {/* Decorative feature grid */}
+          {/* Icon bullet list */}
           <Reveal delay={120}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="flex flex-col gap-4">
               {[
                 {
-                  icon: <Cpu className="w-5 h-5" />,
-                  title: t("Silicon to System", "من السيليكون إلى النظام"),
-                  desc: t(
-                    "Full-stack ownership from component selection to deployment.",
-                    "ملكية كاملة من اختيار المكون إلى النشر.",
-                  ),
+                  icon: <Layers className="w-4 h-4" />,
+                  titleEn: "Co-designed architectures",
+                  titleAr: "بنيات مُصمَّمة معاً",
+                  descEn: "Hardware and firmware designed as one system, not bolted together.",
+                  descAr: "الأجهزة والبرمجيات مُصمَّمة كنظام واحد، لا كقطعتين مُجمَّعتين.",
                 },
                 {
-                  icon: <Zap className="w-5 h-5" />,
-                  title: t("Power-Optimised", "مُحسَّن للطاقة"),
-                  desc: t(
-                    "Every µA matters. Firmware and layout co-optimised.",
-                    "كل ميكروأمبير مهم. برمجيات وتخطيط مُحسَّنان معاً.",
-                  ),
+                  icon: <Zap className="w-4 h-4" />,
+                  titleEn: "Power-aware systems",
+                  titleAr: "أنظمة واعية بالطاقة",
+                  descEn: "Every µA matters — from register settings to PCB copper weight.",
+                  descAr: "كل ميكروأمبير مهم — من ضبط الريجيستر إلى وزن النحاس في اللوحة.",
                 },
                 {
-                  icon: <Bot className="w-5 h-5" />,
-                  title: t("Real-Time Control", "التحكم الآني"),
-                  desc: t(
-                    "Hard real-time RTOS, PID, and sensor fusion.",
-                    "نظام RTOS صارم، PID، ودمج حساسات.",
-                  ),
+                  icon: <Bot className="w-4 h-4" />,
+                  titleEn: "Real-time autonomy",
+                  titleAr: "استقلالية آنية",
+                  descEn: "Hard real-time RTOS, PID loops, and multi-sensor fusion.",
+                  descAr: "RTOS صارم، حلقات PID، ودمج متعدد الحساسات.",
                 },
                 {
-                  icon: <Layers className="w-5 h-5" />,
-                  title: t("High-Density PCB", "لوحات PCB عالية الكثافة"),
-                  desc: t(
-                    "6-layer HDI boards with signal integrity focus.",
-                    "لوحات HDI بستة طبقات مع تركيز على سلامة الإشارة.",
-                  ),
+                  icon: <Cpu className="w-4 h-4" />,
+                  titleEn: "Silicon to deployment",
+                  titleAr: "من السيليكون إلى النشر",
+                  descEn: "Full-stack ownership: concept → schematic → PCB → firmware → field.",
+                  descAr: "ملكية كاملة: فكرة ← مخطط ← لوحة ← برمجيات ← ميدان.",
                 },
-              ].map((feat, i) => (
+              ].map((item, i) => (
                 <div
                   key={i}
-                  className="p-5 rounded-xl transition-all duration-300"
+                  className="flex gap-4 p-4 rounded-xl"
                   style={{
-                    background: "rgba(255,255,255,0.03)",
+                    background: "rgba(255,255,255,0.025)",
                     border: "1px solid rgba(255,255,255,0.07)",
+                    transition: "border-color 0.25s ease, background 0.25s ease",
                   }}
                   onMouseEnter={e => {
                     const el = e.currentTarget as HTMLElement;
@@ -537,19 +570,23 @@ export function About() {
                   onMouseLeave={e => {
                     const el = e.currentTarget as HTMLElement;
                     el.style.borderColor = "rgba(255,255,255,0.07)";
-                    el.style.background = "rgba(255,255,255,0.03)";
+                    el.style.background = "rgba(255,255,255,0.025)";
                   }}
                 >
-                  <span
-                    className="inline-flex p-2 rounded-lg mb-3"
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
                     style={{ background: "rgba(34,211,238,0.1)", color: "hsl(188 86% 53%)" }}
                   >
-                    {feat.icon}
-                  </span>
-                  <h4 className="text-sm font-bold text-white mb-1">{feat.title}</h4>
-                  <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.4)" }}>
-                    {feat.desc}
-                  </p>
+                    {item.icon}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-white mb-0.5">
+                      {isRTL ? item.titleAr : item.titleEn}
+                    </p>
+                    <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.4)" }}>
+                      {isRTL ? item.descAr : item.descEn}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -558,68 +595,80 @@ export function About() {
       </section>
 
       {/* ════════════════════════════════════════════════════════════════════
-          §5  CTA
+          §4  CTA — Premium "Let's Build"
+          Layered gradient, top-edge glow, strong headline, single button.
           ════════════════════════════════════════════════════════════════════ */}
-      <section className="max-w-7xl mx-auto px-6 sm:px-8 pb-24 sm:pb-36">
+      <section className="max-w-7xl mx-auto px-6 sm:px-8 pb-24 sm:pb-32">
         <Divider />
 
         <Reveal delay={0}>
           <div
-            className="relative overflow-hidden rounded-3xl p-12 sm:p-16 text-center"
+            className="relative overflow-hidden rounded-3xl px-8 py-16 sm:px-16 sm:py-20 text-center"
             style={{
-              background: "linear-gradient(135deg, rgba(34,211,238,0.08) 0%, rgba(96,165,250,0.06) 50%, rgba(167,139,250,0.04) 100%)",
+              background:
+                "linear-gradient(160deg, rgba(34,211,238,0.07) 0%, rgba(10,15,24,0.4) 40%, rgba(10,15,24,0.4) 60%, rgba(96,165,250,0.05) 100%)",
               border: "1px solid rgba(34,211,238,0.12)",
             }}
           >
-            {/* Decorative glow */}
+            {/* Top glow line */}
             <div
               className="absolute top-0 inset-x-0 h-px pointer-events-none"
-              style={{ background: "linear-gradient(to right, transparent, rgba(34,211,238,0.3), transparent)" }}
+              style={{ background: "linear-gradient(to right, transparent, rgba(34,211,238,0.35), transparent)" }}
+            />
+            {/* Ambient blur orb */}
+            <div
+              className="absolute -top-24 left-1/2 -translate-x-1/2 w-72 h-72 rounded-full pointer-events-none blur-3xl"
+              style={{ background: "rgba(34,211,238,0.05)" }}
             />
 
-            <SectionLabel>{t("Let's Build", "لنبني معاً")}</SectionLabel>
+            <div className="relative">
+              <Eyebrow>{t("Let's Build", "لنبني معاً")}</Eyebrow>
 
-            <h2
-              className="text-3xl sm:text-5xl font-black text-white tracking-tight mt-2 mb-5 leading-tight"
-            >
-              {t(
-                <>Have a project<br />in mind?</>,
-                <>لديك مشروع<br />في ذهنك؟</>,
-              )}
-            </h2>
+              <h2
+                className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight mt-2 mb-4"
+              >
+                {t(
+                  <>Have a project<br />in mind?</>,
+                  <>لديك مشروع<br />في ذهنك؟</>,
+                )}
+              </h2>
 
-            <p
-              className="text-base mx-auto mb-10"
-              style={{ color: "rgba(255,255,255,0.5)", maxWidth: "480px" }}
-            >
-              {t(
-                "From concept to prototype to production — let's engineer it right from the start.",
-                "من الفكرة إلى النموذج إلى الإنتاج — لنهندسها بشكل صحيح من البداية.",
-              )}
-            </p>
+              <p
+                className="text-base mx-auto mb-10"
+                style={{ color: "rgba(255,255,255,0.45)", maxWidth: "440px" }}
+              >
+                {t(
+                  "From first schematic to production hardware — let's engineer it right, from day one.",
+                  "من أول مخطط إلى الأجهزة الإنتاجية — لنهندسها بشكل صحيح، من اليوم الأول.",
+                )}
+              </p>
 
-            <Link
-              href="/contact"
-              className="inline-flex items-center gap-2.5 px-8 py-4 rounded-xl text-sm font-bold tracking-wide active:scale-[0.97] transition-transform"
-              style={{
-                background: "hsl(188 86% 53%)",
-                color: "#0a0f18",
-                transition: "background 0.2s ease, box-shadow 0.25s ease, transform 0.15s ease",
-              }}
-              onMouseEnter={e => {
-                const el = e.currentTarget as HTMLElement;
-                el.style.background = "hsl(188 86% 47%)";
-                el.style.boxShadow = "0 0 32px rgba(34,211,238,0.45), 0 8px 24px rgba(0,0,0,0.3)";
-              }}
-              onMouseLeave={e => {
-                const el = e.currentTarget as HTMLElement;
-                el.style.background = "hsl(188 86% 53%)";
-                el.style.boxShadow = "none";
-              }}
-            >
-              {t("Get in Touch", "تواصل معي")}
-              <ArrowRight className="w-4 h-4" style={{ transform: isRTL ? "scaleX(-1)" : "none" }} />
-            </Link>
+              <Link
+                href="/contact"
+                className="inline-flex items-center gap-2.5 px-8 py-4 rounded-xl text-sm font-bold tracking-wide active:scale-[0.97]"
+                style={{
+                  background: "hsl(188 86% 53%)",
+                  color: "#0a0f18",
+                  transition: "background 0.2s ease, box-shadow 0.25s ease, transform 0.15s ease",
+                }}
+                onMouseEnter={e => {
+                  const el = e.currentTarget as HTMLElement;
+                  el.style.background = "hsl(188 86% 47%)";
+                  el.style.boxShadow = "0 0 36px rgba(34,211,238,0.5), 0 8px 24px rgba(0,0,0,0.3)";
+                }}
+                onMouseLeave={e => {
+                  const el = e.currentTarget as HTMLElement;
+                  el.style.background = "hsl(188 86% 53%)";
+                  el.style.boxShadow = "none";
+                }}
+              >
+                {t("Start a Project", "ابدأ مشروعًا")}
+                <ArrowRight
+                  className="w-4 h-4"
+                  style={{ transform: isRTL ? "scaleX(-1)" : "none" }}
+                />
+              </Link>
+            </div>
           </div>
         </Reveal>
       </section>
