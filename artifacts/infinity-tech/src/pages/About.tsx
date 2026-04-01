@@ -161,102 +161,152 @@ export function About() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 lg:items-start">
 
           {/* ══ LEFT STICKY SIDEBAR ═══════════════════════════════════════════ */}
-          <div className="lg:col-span-4 lg:sticky lg:top-24 lg:self-start">
+          <div className="lg:col-span-4 lg:sticky lg:top-24 lg:self-start group/card">
+            {/*
+             * Glassmorphism card:
+             *   - backdrop-blur-xl + semi-transparent dark bg
+             *   - thin 1px rgba border
+             *   - deep ambient shadow
+             *   - subtle lift + glow intensification on hover
+             */}
             <div
-              className="
-                rounded-2xl sm:rounded-3xl overflow-hidden
-                border border-border bg-card
-                shadow-[0_4px_32px_rgba(0,0,0,0.35)]
-              "
+              style={{
+                background: "rgba(10, 15, 24, 0.72)",
+                backdropFilter: "blur(12px)",
+                WebkitBackdropFilter: "blur(12px)",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                boxShadow: "0 8px 40px rgba(0,0,0,0.55), 0 0 0 0.5px rgba(34,211,238,0.04)",
+                borderRadius: "1.5rem",
+                overflow: "hidden",
+                transition: "transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease",
+              }}
+              onMouseEnter={e => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.transform = "translateY(-4px)";
+                el.style.boxShadow = "0 16px 56px rgba(0,0,0,0.6), 0 0 0 1px rgba(34,211,238,0.14), 0 0 32px rgba(34,211,238,0.07)";
+                el.style.borderColor = "rgba(34,211,238,0.14)";
+              }}
+              onMouseLeave={e => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.transform = "translateY(0)";
+                el.style.boxShadow = "0 8px 40px rgba(0,0,0,0.55), 0 0 0 0.5px rgba(34,211,238,0.04)";
+                el.style.borderColor = "rgba(255,255,255,0.08)";
+              }}
             >
-              {/* Avatar */}
-              <div className="relative group overflow-hidden">
+              {/* ── Avatar ─────────────────────────────────────────────── */}
+              <div className="relative overflow-hidden">
+                {/* Subtle ring overlay on the image */}
+                <div
+                  className="absolute inset-0 z-10 pointer-events-none rounded-t-[1.5rem]"
+                  style={{ boxShadow: "inset 0 0 0 1px rgba(34,211,238,0.12)" }}
+                />
                 <img
                   src={`${import.meta.env.BASE_URL}images/avatar.png`}
                   alt="Fares Salah"
                   loading="lazy"
                   className="
                     w-full aspect-square object-cover
-                    grayscale opacity-80
-                    group-hover:grayscale-0 group-hover:opacity-100
+                    grayscale opacity-75
+                    group-hover/card:grayscale-0 group-hover/card:opacity-95
                     transition-[filter,opacity] duration-500
+                    scale-[1.01] group-hover/card:scale-100
                   "
                 />
-                {/* Cyan overlay on hover */}
-                <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 mix-blend-overlay pointer-events-none" />
-                {/* Bottom fade into card */}
-                <div className="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-card to-transparent" />
+                {/* Cyan colour-wash on card hover */}
+                <div className="
+                  absolute inset-0 bg-primary/8 opacity-0
+                  group-hover/card:opacity-100
+                  transition-opacity duration-500
+                  mix-blend-overlay pointer-events-none
+                " />
+                {/* Gradient bleed into identity block */}
+                <div
+                  className="absolute bottom-0 inset-x-0 h-20 pointer-events-none"
+                  style={{ background: "linear-gradient(to top, rgba(10,15,24,0.72) 0%, transparent 100%)" }}
+                />
               </div>
 
-              {/* Identity block */}
-              <div className="px-5 pb-5 pt-3" style={{ textAlign }}>
-                {/* Primary name — always Arabic as requested */}
-                <h1 className="text-2xl font-black tracking-tight text-foreground leading-tight mb-0.5" dir="rtl" style={{ textAlign: "right" }}>
+              {/* ── Identity block ─────────────────────────────────────── */}
+              <div className="px-6 pb-6 pt-4" style={{ textAlign }}>
+
+                {/* Name — always Arabic, large + bold */}
+                <h1
+                  dir="rtl"
+                  style={{ textAlign: "right" }}
+                  className="text-[1.65rem] font-black tracking-tight text-white leading-tight mb-1"
+                >
                   مهندس فارس
                 </h1>
-                <p className="text-primary font-medium text-sm mb-4">
+
+                {/* Role badge */}
+                <p
+                  className="text-sm font-medium mb-5"
+                  style={{ color: "hsl(188 86% 53%)" }}
+                >
                   {t("Hardware Engineer & PCB Designer", "مهندس أجهزة ومصمم لوحات PCB")}
                 </p>
 
-                {/* Meta */}
-                <div className="flex flex-col gap-1.5 mb-5">
+                {/* Meta — location + email */}
+                <div className="flex flex-col gap-2 mb-5">
                   <div
-                    className="flex items-center gap-2 text-muted-foreground text-xs"
-                    style={{ justifyContent: isRTL ? "flex-end" : "flex-start" }}
+                    className="flex items-center gap-2 text-xs"
+                    style={{
+                      color: "rgba(255,255,255,0.45)",
+                      justifyContent: isRTL ? "flex-end" : "flex-start",
+                    }}
                   >
-                    <MapPin className="w-3 h-3 shrink-0 text-primary/60" />
+                    <MapPin className="w-3 h-3 shrink-0" style={{ color: "hsl(188 86% 53% / 0.6)" }} />
                     <span>{t("Alexandria, Egypt", "الإسكندرية، مصر")}</span>
                   </div>
                   <div
-                    className="flex items-center gap-2 text-muted-foreground text-xs"
-                    style={{ justifyContent: isRTL ? "flex-end" : "flex-start" }}
+                    className="flex items-center gap-2 text-xs"
+                    style={{
+                      color: "rgba(255,255,255,0.45)",
+                      justifyContent: isRTL ? "flex-end" : "flex-start",
+                    }}
                   >
-                    <Mail className="w-3 h-3 shrink-0 text-primary/60" />
+                    <Mail className="w-3 h-3 shrink-0" style={{ color: "hsl(188 86% 53% / 0.6)" }} />
                     <span>fares@infinitytech.dev</span>
                   </div>
                 </div>
 
-                <p className="text-xs text-muted-foreground leading-relaxed mb-5">
+                {/* Short bio */}
+                <p
+                  className="text-xs leading-relaxed mb-6"
+                  style={{ color: "rgba(255,255,255,0.38)", textAlign }}
+                >
                   {t(
                     "Specialising in the full hardware stack — from schematic capture and multi-layer PCB layout to bare-metal firmware and real-time control systems.",
                     "متخصص في المكدس الكامل للأجهزة — من رسم المخططات وتصميم لوحات PCB متعددة الطبقات إلى البرمجيات الثابتة وأنظمة التحكم الآني.",
                   )}
                 </p>
 
-                {/* ── CTA buttons ────────────────────────────────────────── */}
-                <div className="flex gap-2.5">
-                  {/* Primary: تواصل — solid cyan */}
-                  <Link
-                    href="/contact"
-                    className="
-                      flex-1 py-2.5 rounded-xl text-center text-sm font-bold
-                      bg-primary text-primary-foreground
-                      transition-all duration-200
-                      hover:bg-primary/90
-                      hover:shadow-[0_0_18px_rgba(34,211,238,0.35)]
-                      active:scale-[0.97]
-                    "
-                  >
-                    تواصل
-                  </Link>
-
-                  {/* Secondary: البورتفوليو — glassmorphism outline */}
-                  <Link
-                    href="/projects"
-                    className="
-                      flex-1 py-2.5 rounded-xl text-center text-sm font-bold
-                      bg-white/5 backdrop-blur-sm
-                      border border-white/12
-                      text-foreground/80
-                      transition-all duration-200
-                      hover:bg-white/10 hover:border-primary/30 hover:text-primary
-                      hover:shadow-[0_0_12px_rgba(34,211,238,0.12)]
-                      active:scale-[0.97]
-                    "
-                  >
-                    البورتفوليو
-                  </Link>
-                </div>
+                {/* ── Single CTA: تواصل ───────────────────────────────── */}
+                <Link
+                  href="/contact"
+                  className="
+                    block w-full py-3 rounded-xl
+                    text-center text-sm font-bold tracking-wide
+                    text-primary-foreground
+                    transition-all duration-250
+                    active:scale-[0.97]
+                  "
+                  style={{
+                    background: "hsl(188 86% 53%)",
+                    boxShadow: "0 0 0 0 rgba(34,211,238,0)",
+                    transition: "background 0.2s ease, box-shadow 0.25s ease, transform 0.15s ease",
+                  }}
+                  onMouseEnter={e => {
+                    (e.currentTarget as HTMLElement).style.background = "hsl(188 86% 47%)";
+                    (e.currentTarget as HTMLElement).style.boxShadow = "0 0 22px rgba(34,211,238,0.42), 0 4px 12px rgba(0,0,0,0.3)";
+                  }}
+                  onMouseLeave={e => {
+                    (e.currentTarget as HTMLElement).style.background = "hsl(188 86% 53%)";
+                    (e.currentTarget as HTMLElement).style.boxShadow = "0 0 0 0 rgba(34,211,238,0)";
+                  }}
+                >
+                  تواصل
+                </Link>
               </div>
             </div>
           </div>
