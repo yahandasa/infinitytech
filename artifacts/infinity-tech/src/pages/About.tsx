@@ -99,96 +99,112 @@ export function About() {
 
         <div className="flex flex-col lg:flex-row gap-10 lg:gap-16 lg:items-start">
 
-          {/* ── Profile card — fixed 300 px column ────────────────────── */}
-          <Reveal delay={0} className="w-full lg:w-[300px] lg:flex-shrink-0">
-            <div style={{ maxWidth: "300px", width: "100%", margin: "0 auto" }}>
+          {/* ── Profile card — fluid responsive ────────────────────── */}
+          {/*
+           * Sizing:
+           *   mobile  (<640)   w-full — fills the padded section width
+           *   sm/md   (640-1023) max-w-sm, centered — tighter on portrait tablets
+           *   lg+     (1024+)  max-w-[300px], left-aligned in the flex row, no shrink
+           */}
+          <Reveal
+            delay={0}
+            className="w-full sm:max-w-sm sm:mx-auto lg:mx-0 lg:max-w-[300px] lg:flex-shrink-0"
+          >
+            <div
+              className="w-full overflow-hidden rounded-2xl"
+              style={{
+                background: "rgba(10,15,24,0.72)",
+                backdropFilter: "blur(12px)",
+                WebkitBackdropFilter: "blur(12px)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                boxShadow: "0 16px 56px rgba(0,0,0,0.5)",
+                transition: "box-shadow 0.3s ease, border-color 0.3s ease, transform 0.3s ease",
+              }}
+              onMouseEnter={e => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.transform = "translateY(-3px)";
+                el.style.boxShadow = "0 24px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(34,211,238,0.12)";
+                el.style.borderColor = "rgba(34,211,238,0.14)";
+              }}
+              onMouseLeave={e => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.transform = "translateY(0)";
+                el.style.boxShadow = "0 16px 56px rgba(0,0,0,0.5)";
+                el.style.borderColor = "rgba(255,255,255,0.08)";
+              }}
+            >
+              {/* Avatar — aspect-square ensures 1:1 ratio at every width */}
+              <div className="relative overflow-hidden">
+                <div
+                  className="absolute inset-0 z-10 pointer-events-none"
+                  style={{ boxShadow: "inset 0 0 0 1px rgba(34,211,238,0.1)" }}
+                />
+                <img
+                  src={`${import.meta.env.BASE_URL}images/avatar.png`}
+                  alt="Eng. Fares Salah"
+                  loading="eager"
+                  className="w-full aspect-square object-cover object-top grayscale opacity-75 hover:grayscale-0 hover:opacity-95 transition-[filter,opacity] duration-500"
+                />
+                <div
+                  className="absolute bottom-0 inset-x-0 h-20 pointer-events-none"
+                  style={{ background: "linear-gradient(to top, rgba(10,15,24,0.85), transparent)" }}
+                />
+              </div>
+
+              {/*
+               * Identity — always dir="ltr" so language toggle never shifts the card.
+               * min-h prevents layout-shift when the contact button text switches EN↔AR.
+               */}
               <div
-                className="overflow-hidden rounded-2xl"
-                style={{
-                  background: "rgba(10,15,24,0.72)",
-                  backdropFilter: "blur(12px)",
-                  WebkitBackdropFilter: "blur(12px)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  boxShadow: "0 16px 56px rgba(0,0,0,0.5)",
-                  transition: "box-shadow 0.3s ease, border-color 0.3s ease, transform 0.3s ease",
-                }}
-                onMouseEnter={e => {
-                  const el = e.currentTarget as HTMLElement;
-                  el.style.transform = "translateY(-3px)";
-                  el.style.boxShadow = "0 24px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(34,211,238,0.12)";
-                  el.style.borderColor = "rgba(34,211,238,0.14)";
-                }}
-                onMouseLeave={e => {
-                  const el = e.currentTarget as HTMLElement;
-                  el.style.transform = "translateY(0)";
-                  el.style.boxShadow = "0 16px 56px rgba(0,0,0,0.5)";
-                  el.style.borderColor = "rgba(255,255,255,0.08)";
-                }}
+                className="px-5 pb-5 pt-4 min-h-[9rem]"
+                dir="ltr"
+                style={{ textAlign: "left" }}
               >
-                {/* Avatar */}
-                <div className="relative overflow-hidden">
-                  <div
-                    className="absolute inset-0 z-10 pointer-events-none"
-                    style={{ boxShadow: "inset 0 0 0 1px rgba(34,211,238,0.1)" }}
-                  />
-                  <img
-                    src={`${import.meta.env.BASE_URL}images/avatar.png`}
-                    alt="Eng. Fares Salah"
-                    loading="eager"
-                    className="w-full aspect-square object-cover grayscale opacity-75 hover:grayscale-0 hover:opacity-95 transition-[filter,opacity] duration-500"
-                  />
-                  <div
-                    className="absolute bottom-0 inset-x-0 h-20 pointer-events-none"
-                    style={{ background: "linear-gradient(to top, rgba(10,15,24,0.85), transparent)" }}
-                  />
+                <h2
+                  className="font-mono font-bold text-white leading-tight mb-0.5"
+                  style={{ fontSize: "clamp(1rem, 3.5vw, 1.2rem)", letterSpacing: "-0.01em" }}
+                >
+                  Eng. Fares Salah
+                </h2>
+                <p
+                  className="text-sm font-medium mb-4"
+                  style={{ color: "hsl(188 86% 53%)" }}
+                >
+                  Hardware Engineer & PCB Designer
+                </p>
+
+                <div className="flex flex-col gap-2 mb-5">
+                  <div className="flex items-center gap-2 text-xs min-w-0" style={{ color: "rgba(255,255,255,0.4)" }}>
+                    <MapPin className="w-3 h-3 shrink-0" style={{ color: "hsl(188 86% 53% / 0.6)" }} />
+                    <span className="truncate">Alexandria, Egypt</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs min-w-0" style={{ color: "rgba(255,255,255,0.4)" }}>
+                    <Mail className="w-3 h-3 shrink-0" style={{ color: "hsl(188 86% 53% / 0.6)" }} />
+                    <span className="truncate">fares@infinitytech.dev</span>
+                  </div>
                 </div>
 
-                {/* Identity — always LTR, immune to language toggle */}
-                <div className="px-6 pb-6 pt-4" dir="ltr" style={{ textAlign: "left" }}>
-                  <h1
-                    className="font-mono font-bold text-white leading-tight mb-1"
-                    style={{ fontSize: "1.2rem", letterSpacing: "-0.01em" }}
-                  >
-                    Eng. Fares Salah
-                  </h1>
-                  <p
-                    className="text-sm font-medium mb-4"
-                    style={{ color: "hsl(188 86% 53%)" }}
-                  >
-                    Hardware Engineer & PCB Designer
-                  </p>
-                  <div className="flex flex-col gap-2 mb-5">
-                    <div className="flex items-center gap-2 text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
-                      <MapPin className="w-3 h-3 shrink-0" style={{ color: "hsl(188 86% 53% / 0.6)" }} />
-                      <span>Alexandria, Egypt</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
-                      <Mail className="w-3 h-3 shrink-0" style={{ color: "hsl(188 86% 53% / 0.6)" }} />
-                      <span>fares@infinitytech.dev</span>
-                    </div>
-                  </div>
-                  <Link
-                    href="/contact"
-                    className="block w-full py-2.5 rounded-xl text-center text-sm font-bold active:scale-[0.97]"
-                    style={{
-                      background: "hsl(188 86% 53%)",
-                      color: "#0a0f18",
-                      transition: "background 0.2s ease, box-shadow 0.25s ease",
-                    }}
-                    onMouseEnter={e => {
-                      const el = e.currentTarget as HTMLElement;
-                      el.style.background = "hsl(188 86% 47%)";
-                      el.style.boxShadow = "0 0 20px rgba(34,211,238,0.4)";
-                    }}
-                    onMouseLeave={e => {
-                      const el = e.currentTarget as HTMLElement;
-                      el.style.background = "hsl(188 86% 53%)";
-                      el.style.boxShadow = "none";
-                    }}
-                  >
-                    {t("Contact", "تواصل")}
-                  </Link>
-                </div>
+                <Link
+                  href="/contact"
+                  className="block w-full py-2.5 rounded-xl text-center text-sm font-bold active:scale-[0.97]"
+                  style={{
+                    background: "hsl(188 86% 53%)",
+                    color: "#0a0f18",
+                    transition: "background 0.2s ease, box-shadow 0.25s ease",
+                  }}
+                  onMouseEnter={e => {
+                    const el = e.currentTarget as HTMLElement;
+                    el.style.background = "hsl(188 86% 47%)";
+                    el.style.boxShadow = "0 0 20px rgba(34,211,238,0.4)";
+                  }}
+                  onMouseLeave={e => {
+                    const el = e.currentTarget as HTMLElement;
+                    el.style.background = "hsl(188 86% 53%)";
+                    el.style.boxShadow = "none";
+                  }}
+                >
+                  {t("Contact", "تواصل")}
+                </Link>
               </div>
             </div>
           </Reveal>
