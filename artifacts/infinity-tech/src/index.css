@@ -632,6 +632,37 @@ header[data-navbar] {
   max-height: 4.5rem !important;
 }
 
+/*
+ * Bottom separator — pseudo-element approach.
+ *
+ * Why not border-bottom?
+ *   border-bottom renders flush against the locked height boundary.
+ *   When the header box clips at exactly 4.5rem the border can appear
+ *   to overlap into the page content.  A ::after pseudo set to
+ *   position:absolute + bottom:0 is always inside the element and
+ *   never risks visual collision with adjacent content.
+ *
+ * The gradient fades to transparent at the edges for a Stripe-like
+ * "floating" separation rather than a hard ruled line.
+ */
+header[data-navbar]::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.07) 12%,
+    rgba(255, 255, 255, 0.07) 88%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
 /* Wordmark tracking — restores spacing stripped by the global AR rule */
 body.lang-ar header[data-navbar] .nb-wordmark {
   letter-spacing: 0.12em !important;
