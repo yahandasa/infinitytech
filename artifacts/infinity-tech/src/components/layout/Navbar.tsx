@@ -60,26 +60,23 @@ export function Navbar() {
         data-navbar
         dir="ltr"
         className={cn(
-          /*
-           * Base: always semi-transparent with backdrop blur.
-           * The bottom separator is a CSS ::after pseudo-element —
-           * no border-b here, which avoids the overlap issue.
-           */
           "fixed top-0 left-0 right-0 z-50",
           "bg-[#080d18]/50 backdrop-blur-[18px] saturate-[180%]",
-          "transition-[background-color,box-shadow] duration-500 ease-out",
           /*
-           * Scrolled state:
-           *   - Slightly more opaque background
-           *   - A single 1-px outline ring (box-shadow inset) replaces the
-           *     old massive 32px drop-shadow — this is the Vercel / Linear style
+           * border-b is the bottom separator.
+           * Height is 5rem (80px) — the extra 8px over the old 72px
+           * gives the content genuine vertical breathing room so the
+           * border reads as a deliberate separator and never feels
+           * cramped against the logo or nav text.
            */
+          "border-b border-white/[0.07]",
+          "transition-[background-color,box-shadow] duration-500 ease-out",
           isScrolled && [
             "bg-[#080d18]/80",
             "shadow-[0_0_0_1px_rgba(255,255,255,0.05),0_4px_20px_rgba(0,0,0,0.28)]",
           ],
         )}
-        style={{ height: "4.5rem", minHeight: "4.5rem", maxHeight: "4.5rem" }}
+        style={{ height: "5rem", minHeight: "5rem", maxHeight: "5rem" }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
           <div className="relative flex items-center justify-between h-full overflow-hidden">
@@ -313,10 +310,10 @@ export function Navbar() {
               <div
                 className="flex items-center justify-between px-5"
                 style={{
-                  height: "4.5rem",
-                  minHeight: "4.5rem",
+                  height: "5rem",
+                  minHeight: "5rem",
                   flexShrink: 0,
-                  borderBottom: "1px solid rgba(255,255,255,0.06)",
+                  borderBottom: "1px solid rgba(255,255,255,0.07)",
                 }}
               >
                 <div className="flex flex-col leading-none" style={{ gap: "3px" }}>
