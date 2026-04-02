@@ -411,6 +411,11 @@
     transform-origin: bottom left;
   }
 
+  /* Arabic: drop underline further so it clears Cairo's descenders */
+  body.lang-ar header[data-navbar] .nav-link-underline::after {
+    bottom: -8px;
+  }
+
   /* ── Misc ── */
   .section-divider {
     height: 1px;
