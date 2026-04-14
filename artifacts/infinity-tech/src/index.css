@@ -399,7 +399,7 @@
     width: 100%;
     transform: scaleX(0);
     height: 2px;
-    bottom: -5px;
+    bottom: -7px;
     left: 0;
     background: linear-gradient(90deg, transparent, hsl(var(--primary)), transparent);
     transform-origin: bottom right;
