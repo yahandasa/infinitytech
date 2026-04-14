@@ -413,7 +413,7 @@
 
   /* Arabic: drop underline so it clears Cairo's dots/tails (ي، ة، etc.) */
   body.lang-ar header[data-navbar] .nav-link-underline::after {
-    bottom: -15px;
+    bottom: -10px;
   }
 
   /* ── Misc ── */
