@@ -399,7 +399,7 @@
     width: 100%;
     transform: scaleX(0);
     height: 2px;
-    bottom: -7px;
+    bottom: -4px;
     left: 0;
     background: linear-gradient(90deg, transparent, hsl(var(--primary)), transparent);
     transform-origin: bottom right;
@@ -413,7 +413,7 @@
 
   /* Arabic: drop underline so it clears Cairo's dots/tails (ي، ة، etc.) */
   body.lang-ar header[data-navbar] .nav-link-underline::after {
-    bottom: -10px;
+    bottom: -12px;
   }
 
   /* ── Misc ── */
