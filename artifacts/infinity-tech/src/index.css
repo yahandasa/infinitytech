@@ -411,9 +411,9 @@
     transform-origin: bottom left;
   }
 
-  /* Arabic: drop underline further so it clears Cairo's descenders */
+  /* Arabic: drop underline so it clears Cairo's dots/tails (ي، ة، etc.) */
   body.lang-ar header[data-navbar] .nav-link-underline::after {
-    bottom: -8px;
+    bottom: -12px;
   }
 
   /* ── Misc ── */
