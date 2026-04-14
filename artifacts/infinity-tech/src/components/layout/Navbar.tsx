@@ -170,7 +170,8 @@ export function Navbar() {
                   >
                     {label}
                     <span className={cn(
-                      "absolute bottom-1.57 left-4 right-4 h-px bg-gradient-to-r from-transparent via-primary to-transparent rounded-full transition-transform duration-300 ease-out origin-center",
+                      "absolute left-4 right-4 h-px bg-gradient-to-r from-transparent via-primary to-transparent rounded-full transition-transform duration-300 ease-out origin-center",
+                      isAR ? "bottom-0" : "bottom-1.5",
                       isActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100",
                     )} />
                   </Link>
