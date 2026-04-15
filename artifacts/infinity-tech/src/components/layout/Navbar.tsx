@@ -256,6 +256,7 @@ export function Navbar() {
 
             <motion.div
               key="drawer"
+              data-mobile-nav
               initial={{ x: "100%", opacity: 0.5 }}
               animate={{ x: 0,     opacity: 1 }}
               exit={{    x: "100%", opacity: 0 }}

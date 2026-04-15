@@ -651,6 +651,40 @@ body.lang-ar header[data-navbar] * {
   line-height: 1 !important;
 }
 
+/* ─── Navbar: suppress all browser focus / active rings ─────
+ *
+ * Removes the default outline that browsers add to the last-clicked
+ * element (which "sticks" during scroll). Hover effects are untouched
+ * because they rely only on background/color/box-shadow transitions.
+ *
+ * :focus          → immediate click feedback removed
+ * :focus-visible  → keyboard-navigation outline also removed (intentional
+ *                   for this nav — the active-link underline serves that role)
+ * :active         → prevents a flash ring during mousedown
+ * ─────────────────────────────────────────────────────────── */
+header[data-navbar] a:focus,
+header[data-navbar] a:focus-visible,
+header[data-navbar] a:active,
+header[data-navbar] button:focus,
+header[data-navbar] button:focus-visible,
+header[data-navbar] button:active {
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Mobile drawer / overlay — same rule for any portalled nav elements */
+[data-mobile-nav] a:focus,
+[data-mobile-nav] a:focus-visible,
+[data-mobile-nav] a:active,
+[data-mobile-nav] button:focus,
+[data-mobile-nav] button:focus-visible,
+[data-mobile-nav] button:active {
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* ─── Fluid typography utilities ────────────────────────────
  *
  * Uses CSS clamp() for smooth, continuous font-size scaling
