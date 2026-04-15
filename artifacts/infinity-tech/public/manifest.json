@@ -1,6 +1,6 @@
 {
-  "name": "Infinity Tech",
-  "short_name": "IT Admin",
+  "name": "Admin",
+  "short_name": "Admin",
   "description": "Infinity Tech — Eng. Fares Salah portfolio & leads dashboard",
   "start_url": "/admin-infinity",
   "display": "standalone",
