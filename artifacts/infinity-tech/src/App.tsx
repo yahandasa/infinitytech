@@ -23,7 +23,8 @@ const Contact     = lazy(() => import("@/pages/Contact").then(m => ({ default: m
 const NotFound    = lazy(() => import("@/pages/not-found"));
 
 // Admin section is fully lazy — contains recharts + all admin components
-const AdminSection = lazy(() => import("@/admin/AdminSection"));
+const AdminSection  = lazy(() => import("@/admin/AdminSection"));
+const AdminInfinity = lazy(() => import("@/pages/AdminInfinity"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -104,7 +105,16 @@ function PublicRoutes() {
 
 function AppContent() {
   const [location] = useLocation();
-  const isAdmin = location === "/admin" || location.startsWith("/admin/");
+  const isAdmin         = location === "/admin" || location.startsWith("/admin/");
+  const isAdminInfinity = location === "/admin-infinity";
+
+  if (isAdminInfinity) {
+    return (
+      <Suspense fallback={<PageFallback />}>
+        <AdminInfinity />
+      </Suspense>
+    );
+  }
 
   if (isAdmin) {
     return (
