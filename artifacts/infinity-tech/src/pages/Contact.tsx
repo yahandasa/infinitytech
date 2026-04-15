@@ -1,23 +1,259 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
 import { SEO } from "@/components/SEO";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Github, Linkedin, Mail, MapPin, Send } from "lucide-react";
+import { MapPin, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { submitContactForm } from "@/hooks/use-projects";
 import { useLanguage } from "@/contexts/LanguageContext";
 
+// ── Form schema (unchanged) ───────────────────────────────────────────────────
 const formSchema = z.object({
   name: z.string().min(2, "Name is too short"),
   email: z.string().email("Invalid email address"),
   subject: z.string().min(5, "Subject is required"),
   message: z.string().min(10, "Message must be at least 10 characters"),
 });
-
 type FormValues = z.infer<typeof formSchema>;
 
+// ── CSS-only fade-in (no framer-motion, no layout-thrash) ────────────────────
+function useFadeIn(threshold = 0.05) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [vis, setVis] = useState(false);
+  useEffect(() => {
+    const el = ref.current; if (!el) return;
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setVis(true); obs.disconnect(); } },
+      { threshold },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+  return { ref, vis };
+}
+
+function Reveal({ children, delay = 0, className = "" }: {
+  children: React.ReactNode; delay?: number; className?: string;
+}) {
+  const { ref, vis } = useFadeIn();
+  return (
+    <div ref={ref} className={className} style={{
+      opacity: vis ? 1 : 0,
+      transform: vis ? "translateY(0)" : "translateY(14px)",
+      transition: `opacity 0.48s ease ${delay}ms, transform 0.48s ease ${delay}ms`,
+      willChange: "transform, opacity",
+    }}>
+      {children}
+    </div>
+  );
+}
+
+// ── Social links data ─────────────────────────────────────────────────────────
+const SOCIALS = [
+  {
+    id: "linkedin",
+    label: "LinkedIn",
+    sub: "/in/fares-salah-eng",
+    href: "https://linkedin.com/in/fares-salah-eng",
+    color: "#0A66C2",
+    glow: "0 0 0 1px rgba(10,102,194,0.45), 0 0 24px rgba(10,102,194,0.2)",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22" aria-hidden="true">
+        <path d="M20.447 20.452H16.89v-5.569c0-1.328-.024-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a1.974 1.974 0 1 1 0-3.948 1.974 1.974 0 0 1 0 3.948zm1.707 13.019H3.63V9h3.414v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+      </svg>
+    ),
+  },
+  {
+    id: "github",
+    label: "GitHub",
+    sub: "/infinitytech-dev",
+    href: "https://github.com/infinitytech-dev",
+    color: "#e6edf3",
+    glow: "0 0 0 1px rgba(230,237,243,0.3), 0 0 24px rgba(230,237,243,0.1)",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22" aria-hidden="true">
+        <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+      </svg>
+    ),
+  },
+  {
+    id: "twitter",
+    label: "X (Twitter)",
+    sub: "@InfinityTech_",
+    href: "https://x.com/InfinityTech_",
+    color: "#e7e9ea",
+    glow: "0 0 0 1px rgba(231,233,234,0.25), 0 0 24px rgba(231,233,234,0.1)",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" aria-hidden="true">
+        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+      </svg>
+    ),
+  },
+  {
+    id: "email",
+    label: "Email",
+    sub: "admin.infinity.tech@gmail.com",
+    href: "mailto:admin.infinity.tech@gmail.com",
+    color: "hsl(188 86% 53%)",
+    glow: "0 0 0 1px rgba(34,211,238,0.4), 0 0 24px rgba(34,211,238,0.15)",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="22" height="22" aria-hidden="true">
+        <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+      </svg>
+    ),
+  },
+  {
+    id: "whatsapp",
+    label: "WhatsApp",
+    sub: "+20 100 000 0000",
+    href: "https://wa.me/201000000000",
+    color: "#25D366",
+    glow: "0 0 0 1px rgba(37,211,102,0.4), 0 0 24px rgba(37,211,102,0.15)",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22" aria-hidden="true">
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+      </svg>
+    ),
+  },
+];
+
+// ── Glowing social card ───────────────────────────────────────────────────────
+function SocialCard({ s }: { s: typeof SOCIALS[0] }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <a
+      href={s.href}
+      target={s.id !== "email" ? "_blank" : undefined}
+      rel="noopener noreferrer"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "14px",
+        padding: "14px 18px",
+        borderRadius: "14px",
+        background: hovered ? "rgba(255,255,255,0.04)" : "rgba(10,15,24,0.6)",
+        backdropFilter: "blur(10px)",
+        WebkitBackdropFilter: "blur(10px)",
+        border: `1px solid ${hovered ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.06)"}`,
+        boxShadow: hovered ? s.glow : "none",
+        color: hovered ? s.color : "rgba(255,255,255,0.45)",
+        textDecoration: "none",
+        transition: "background 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease, color 0.22s ease",
+        willChange: "transform",
+        cursor: "pointer",
+      }}
+    >
+      <span style={{ flexShrink: 0, transition: "color 0.22s ease" }}>
+        {s.icon}
+      </span>
+      <span style={{ minWidth: 0 }}>
+        <span style={{
+          display: "block",
+          fontSize: "13px",
+          fontWeight: 600,
+          color: hovered ? s.color : "rgba(255,255,255,0.75)",
+          transition: "color 0.22s ease",
+          lineHeight: 1.3,
+        }}>
+          {s.label}
+        </span>
+        <span style={{
+          display: "block",
+          fontSize: "11px",
+          color: "rgba(255,255,255,0.3)",
+          marginTop: "2px",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+        }}>
+          {s.sub}
+        </span>
+      </span>
+    </a>
+  );
+}
+
+// ── Sleek form field ──────────────────────────────────────────────────────────
+function Field({ label, error, children }: {
+  label: string; error?: string; children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <label style={{
+        display: "block",
+        fontSize: "11px",
+        fontWeight: 600,
+        letterSpacing: "0.1em",
+        textTransform: "uppercase",
+        color: "rgba(255,255,255,0.35)",
+        marginBottom: "10px",
+      }}>
+        {label}
+      </label>
+      {children}
+      {error && (
+        <p style={{ fontSize: "11px", color: "hsl(0 84% 60%)", marginTop: "5px" }}>
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+const inputBase: React.CSSProperties = {
+  width: "100%",
+  background: "transparent",
+  border: "none",
+  borderBottom: "1px solid rgba(255,255,255,0.12)",
+  padding: "10px 0",
+  fontSize: "14px",
+  color: "rgba(255,255,255,0.85)",
+  outline: "none",
+  transition: "border-color 0.2s ease, box-shadow 0.2s ease",
+  fontFamily: "inherit",
+};
+
+function SlimInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <input
+      {...props}
+      style={{
+        ...inputBase,
+        borderBottomColor: focused ? "hsl(188 86% 53%)" : "rgba(255,255,255,0.12)",
+        boxShadow: focused ? "0 1px 0 hsl(188 86% 53%)" : "none",
+        caretColor: "hsl(188 86% 53%)",
+      }}
+      onFocus={e => { setFocused(true); props.onFocus?.(e); }}
+      onBlur={e => { setFocused(false); props.onBlur?.(e); }}
+    />
+  );
+}
+
+function SlimTextarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <textarea
+      {...props}
+      style={{
+        ...inputBase,
+        resize: "none",
+        minHeight: "100px",
+        borderBottomColor: focused ? "hsl(188 86% 53%)" : "rgba(255,255,255,0.12)",
+        boxShadow: focused ? "0 1px 0 hsl(188 86% 53%)" : "none",
+        caretColor: "hsl(188 86% 53%)",
+        display: "block",
+      }}
+      onFocus={e => { setFocused(true); props.onFocus?.(e); }}
+      onBlur={e => { setFocused(false); props.onBlur?.(e); }}
+    />
+  );
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
 export function Contact() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -44,10 +280,7 @@ export function Contact() {
       toast({
         variant: "destructive",
         title: t("Error", "خطأ"),
-        description: t(
-          "Something went wrong. Please try again.",
-          "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
-        ),
+        description: t("Something went wrong. Please try again.", "حدث خطأ ما. يرجى المحاولة مرة أخرى."),
       });
     } finally {
       setIsSubmitting(false);
@@ -55,221 +288,219 @@ export function Contact() {
   };
 
   return (
-    <div className="min-h-screen w-full pt-24 sm:pt-32 pb-16 sm:pb-24 relative">
+    <div className="min-h-screen w-full relative" dir={isRTL ? "rtl" : "ltr"}>
       <SEO
         title={t("Contact", "التواصل")}
         description={t(
-          "Get in touch with Fares Salah for hardware engineering consulting, PCB design projects, or technical collaboration opportunities.",
+          "Get in touch with Fares Salah for hardware engineering consulting, PCB design projects, or technical collaboration.",
           "تواصل مع فارس صلاح للاستشارات الهندسية، مشاريع تصميم PCB، أو فرص التعاون التقني.",
         )}
-        keywords="contact hardware engineer, PCB design consulting, embedded systems consulting, hire hardware engineer"
+        keywords="contact hardware engineer, PCB design consulting, embedded systems"
       />
 
-      <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-primary/5 blur-[150px] rounded-full pointer-events-none" />
+      {/* Background glow — same as Hero & About */}
+      <div
+        className="absolute inset-0 z-0 pointer-events-none"
+        style={{
+          background: "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(34,211,238,0.055) 0%, transparent 68%)",
+        }}
+      />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="text-center max-w-2xl mx-auto mb-10 sm:mb-16"
-        >
-          <h1 className="fluid-h1 font-black text-foreground mb-4">
+      {/* Navbar clearance */}
+      <div className="h-[4.5rem]" />
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 sm:pt-14 pb-20">
+
+        {/* ── Header ───────────────────────────────────────────────────────── */}
+        <Reveal className="mb-14 sm:mb-18" delay={0}>
+          <p
+            className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.22em] mb-4"
+            style={{ color: "hsl(188 86% 53%)" }}
+          >
+            <span className="w-5 h-px" style={{ background: "hsl(188 86% 53%)" }} />
+            {t("Get in Touch", "تواصل معي")}
+          </p>
+          <h1
+            className="font-black text-white tracking-tight"
+            style={{ fontSize: "clamp(2rem, 5vw + 0.5rem, 3.5rem)", lineHeight: 1.08, letterSpacing: "-0.03em" }}
+          >
             {t(
-              <>Initialize <span className="text-primary">Connection</span></>,
-              <>ابدأ <span className="text-primary">التواصل</span></>,
+              <>Initialize <span style={{ color: "hsl(188 86% 53%)" }}>Connection</span></>,
+              <>ابدأ <span style={{ color: "hsl(188 86% 53%)" }}>التواصل</span></>,
             )}
           </h1>
-          <p className="text-lg text-muted-foreground">
+          <p
+            className="mt-4 text-base leading-relaxed max-w-xl"
+            style={{ color: "rgba(255,255,255,0.45)", fontSize: "clamp(0.875rem, 1.5vw + 0.25rem, 1.0625rem)" }}
+          >
             {t(
-              "Whether you have a specific project, an open role, or just want to talk tech — drop a message below.",
-              "سواء كان لديك مشروع محدد، أو دور مفتوح، أو تريد فقط الحديث عن التقنية — أرسل رسالة أدناه.",
+              "Whether you have a project, an open role, or just want to talk tech — drop a message.",
+              "سواء كان لديك مشروع، أو دور مفتوح، أو تريد الحديث عن التقنية — أرسل رسالة.",
             )}
           </p>
-        </motion.div>
+        </Reveal>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 max-w-5xl mx-auto">
+        {/* ── Two-column grid ─────────────────────────────────────────────── */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_clamp(300px,36%,440px)] gap-10 xl:gap-16 items-start">
 
-          {/* Contact Info */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="lg:col-span-4 space-y-8"
-          >
-            <div className="p-6 rounded-2xl bg-card border border-border">
-              <h3
-                className="text-lg font-bold text-foreground mb-6"
-                style={{ textAlign: isRTL ? "right" : "left" }}
+          {/* ── Left: Form ───────────────────────────────────────────────── */}
+          <Reveal delay={80}>
+            <div
+              style={{
+                background: "rgba(10,15,24,0.6)",
+                backdropFilter: "blur(14px)",
+                WebkitBackdropFilter: "blur(14px)",
+                border: "1px solid rgba(255,255,255,0.07)",
+                borderRadius: "20px",
+                padding: "clamp(24px, 4vw, 44px)",
+              }}
+            >
+              <p
+                style={{
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  letterSpacing: "0.18em",
+                  textTransform: "uppercase",
+                  color: "rgba(255,255,255,0.3)",
+                  marginBottom: "28px",
+                }}
               >
-                {t("Direct Channels", "قنوات التواصل المباشر")}
-              </h3>
+                {t("Send a Message", "أرسل رسالة")}
+              </p>
 
-              <div className="space-y-6">
-                <a href="mailto:admin.infinity.tech@gmail.com" className="flex items-start gap-4 group">
-                  <div className="p-3 rounded-xl bg-background border border-border group-hover:border-primary/50 group-hover:text-primary transition-colors">
-                    <Mail className="w-5 h-5" />
-                  </div>
-                  <div style={{ textAlign: isRTL ? "right" : "left" }}>
-                    <p className="text-sm font-medium text-foreground">
-                      {t("Email", "البريد الإلكتروني")}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      admin.infinity.tech@gmail.com
-                    </p>
-                  </div>
-                </a>
-
-                <div className="flex items-start gap-4">
-                  <div className="p-3 rounded-xl bg-background border border-border">
-                    <MapPin className="w-5 h-5 text-muted-foreground" />
-                  </div>
-                  <div style={{ textAlign: isRTL ? "right" : "left" }}>
-                    <p className="text-sm font-medium text-foreground">
-                      {t("Location", "الموقع")}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {t(
-                        <>Alexandria, Egypt<br />(Open to Remote)</>,
-                        <>الإسكندرية، مصر<br />(متاح للعمل عن بعد)</>,
-                      )}
-                    </p>
-                  </div>
+              <form onSubmit={form.handleSubmit(onSubmit)} style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-7">
+                  <Field label={t("Name", "الاسم")} error={form.formState.errors.name?.message}>
+                    <SlimInput
+                      {...form.register("name")}
+                      dir="ltr"
+                      placeholder={t("John Doe", "محمد أحمد")}
+                    />
+                  </Field>
+                  <Field label={t("Email", "البريد الإلكتروني")} error={form.formState.errors.email?.message}>
+                    <SlimInput
+                      {...form.register("email")}
+                      dir="ltr"
+                      placeholder="you@example.com"
+                    />
+                  </Field>
                 </div>
-              </div>
-            </div>
 
-            <div className="p-6 rounded-2xl bg-card border border-border">
-              <h3
-                className="text-lg font-bold text-foreground mb-6"
-                style={{ textAlign: isRTL ? "right" : "left" }}
-              >
-                {t("Social Networks", "شبكات التواصل الاجتماعي")}
-              </h3>
-              <div className="flex gap-4">
-                <a
-                  href="https://github.com/infinitytech-dev"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 flex flex-col items-center justify-center p-4 rounded-xl bg-background border border-border hover:border-primary/50 hover:text-primary transition-all hover:-translate-y-1"
-                >
-                  <Github className="w-6 h-6 mb-2" />
-                  <span className="text-xs font-medium">GitHub</span>
-                </a>
-                <a
-                  href="https://linkedin.com/in/fares-salah-eng"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 flex flex-col items-center justify-center p-4 rounded-xl bg-background border border-border hover:border-primary/50 hover:text-primary transition-all hover:-translate-y-1"
-                >
-                  <Linkedin className="w-6 h-6 mb-2" />
-                  <span className="text-xs font-medium">LinkedIn</span>
-                </a>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Form */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="lg:col-span-8 p-5 sm:p-8 md:p-10 rounded-2xl bg-card border border-border relative overflow-hidden"
-          >
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 relative z-10">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label
-                    className="text-sm font-medium text-foreground block"
-                    style={{ textAlign: isRTL ? "right" : "left" }}
-                  >
-                    {t("Name", "الاسم")}
-                  </label>
-                  <input
-                    {...form.register("name")}
+                <Field label={t("Subject", "الموضوع")} error={form.formState.errors.subject?.message}>
+                  <SlimInput
+                    {...form.register("subject")}
                     dir="ltr"
-                    className="w-full px-4 py-3 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-                    placeholder={t("John Doe", "محمد أحمد")}
+                    placeholder={t("Project Inquiry", "الاستفسار عن مشروع")}
                   />
-                  {form.formState.errors.name && (
-                    <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <label
-                    className="text-sm font-medium text-foreground block"
-                    style={{ textAlign: isRTL ? "right" : "left" }}
-                  >
-                    {t("Email", "البريد الإلكتروني")}
-                  </label>
-                  <input
-                    {...form.register("email")}
+                </Field>
+
+                <Field label={t("Message", "الرسالة")} error={form.formState.errors.message?.message}>
+                  <SlimTextarea
+                    {...form.register("message")}
                     dir="ltr"
-                    className="w-full px-4 py-3 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-                    placeholder="john@example.com"
+                    rows={5}
+                    placeholder={t("How can we build the future together?", "كيف يمكننا بناء المستقبل معاً؟")}
                   />
-                  {form.formState.errors.email && (
-                    <p className="text-xs text-destructive">{form.formState.errors.email.message}</p>
-                  )}
+                </Field>
+
+                <div>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "13px 32px",
+                      background: "hsl(188 86% 53%)",
+                      color: "#0a0f18",
+                      fontWeight: 700,
+                      fontSize: "14px",
+                      borderRadius: "12px",
+                      border: "none",
+                      cursor: isSubmitting ? "not-allowed" : "pointer",
+                      opacity: isSubmitting ? 0.6 : 1,
+                      transition: "background 0.2s ease, box-shadow 0.25s ease",
+                      willChange: "transform",
+                    }}
+                    onMouseEnter={e => {
+                      if (isSubmitting) return;
+                      const el = e.currentTarget as HTMLElement;
+                      el.style.background = "hsl(188 86% 46%)";
+                      el.style.boxShadow = "0 0 28px rgba(34,211,238,0.4)";
+                    }}
+                    onMouseLeave={e => {
+                      const el = e.currentTarget as HTMLElement;
+                      el.style.background = "hsl(188 86% 53%)";
+                      el.style.boxShadow = "none";
+                    }}
+                  >
+                    {isSubmitting ? (
+                      <div style={{
+                        width: 18, height: 18, borderRadius: "50%",
+                        border: "2px solid #0a0f18", borderTopColor: "transparent",
+                        animation: "spin 0.7s linear infinite",
+                      }} />
+                    ) : (
+                      <>
+                        {t("Send Message", "إرسال الرسالة")}
+                        <Send style={{ width: 15, height: 15 }} />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </Reveal>
+
+          {/* ── Right: Social + Location ─────────────────────────────────── */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
+
+            {/* Connect section */}
+            <Reveal delay={160}>
+              <p
+                style={{
+                  fontSize: "11px", fontWeight: 700, letterSpacing: "0.18em",
+                  textTransform: "uppercase", color: "rgba(255,255,255,0.3)",
+                  marginBottom: "14px",
+                }}
+              >
+                {t("Connect with me", "تواصل معي")}
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {SOCIALS.map((s) => (
+                  <SocialCard key={s.id} s={s} />
+                ))}
+              </div>
+            </Reveal>
+
+            {/* Location */}
+            <Reveal delay={240}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "14px",
+                  padding: "16px 18px",
+                  borderRadius: "14px",
+                  background: "rgba(10,15,24,0.5)",
+                  border: "1px solid rgba(255,255,255,0.06)",
+                }}
+              >
+                <MapPin
+                  style={{ width: 18, height: 18, flexShrink: 0, marginTop: 2, color: "hsl(188 86% 53% / 0.7)" }}
+                />
+                <div>
+                  <p style={{ fontSize: "13px", fontWeight: 600, color: "rgba(255,255,255,0.7)", lineHeight: 1.4 }}>
+                    {t("Alexandria, Egypt", "الإسكندرية، مصر")}
+                  </p>
+                  <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)", marginTop: "3px" }}>
+                    {t("Open to Remote", "متاح للعمل عن بعد")}
+                  </p>
                 </div>
               </div>
-
-              <div className="space-y-2">
-                <label
-                  className="text-sm font-medium text-foreground block"
-                  style={{ textAlign: isRTL ? "right" : "left" }}
-                >
-                  {t("Subject", "الموضوع")}
-                </label>
-                <input
-                  {...form.register("subject")}
-                  dir="ltr"
-                  className="w-full px-4 py-3 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-                  placeholder={t("Project Inquiry", "الاستفسار عن مشروع")}
-                />
-                {form.formState.errors.subject && (
-                  <p className="text-xs text-destructive">{form.formState.errors.subject.message}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <label
-                  className="text-sm font-medium text-foreground block"
-                  style={{ textAlign: isRTL ? "right" : "left" }}
-                >
-                  {t("Message", "الرسالة")}
-                </label>
-                <textarea
-                  {...form.register("message")}
-                  dir="ltr"
-                  rows={6}
-                  className="w-full px-4 py-3 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all resize-none"
-                  placeholder={t(
-                    "How can we build the future together?",
-                    "كيف يمكننا بناء المستقبل معاً؟",
-                  )}
-                />
-                {form.formState.errors.message && (
-                  <p className="text-xs text-destructive">{form.formState.errors.message.message}</p>
-                )}
-              </div>
-
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full sm:w-auto px-8 py-4 bg-primary text-primary-foreground font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-primary/90 hover:shadow-[0_0_20px_hsla(188,86%,53%,0.3)] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSubmitting ? (
-                  <div className="w-5 h-5 rounded-full border-2 border-primary-foreground border-t-transparent animate-spin" />
-                ) : (
-                  <>
-                    {t("Send Message", "إرسال الرسالة")}
-                    <Send className="w-4 h-4" />
-                  </>
-                )}
-              </button>
-            </form>
-          </motion.div>
+            </Reveal>
+          </div>
 
         </div>
       </div>
