@@ -92,24 +92,35 @@ export function About() {
 
       {/* ════════════════════════════════════════════════════════════════════
           §1  INTRO — About Me
-          Two-column: profile card (fixed 300 px) + bio.
-          The card block is always dir="ltr" so it never shifts on lang toggle.
+          Fluid two-column layout matching the Hero's grid algorithm exactly.
+          • same radial glow background
+          • same max-w-7xl / px-6 lg:px-8 container
+          • same gap-10 xl:gap-14 column gap
+          • sidebar width: clamp(260px, 28%, 320px) — fluid like col-span-5
+          • navbar clearance via spacer div, not top-padding jumps
           ════════════════════════════════════════════════════════════════════ */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-28 md:pt-32 pb-4">
+      <section className="relative w-full overflow-hidden">
 
-        <div className="flex flex-col lg:flex-row gap-10 lg:gap-16 lg:items-start">
+        {/* Background glow — identical to Hero */}
+        <div
+          className="absolute inset-0 z-0 pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(34,211,238,0.055) 0%, transparent 68%)",
+          }}
+        />
+
+        {/* Navbar clearance — same spacer pattern as Hero */}
+        <div className="h-[4.5rem]" />
+
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12 pb-4">
+
+        {/* fluid grid: 1-col mobile → [sidebar | content] desktop */}
+        <div className="grid grid-cols-1 lg:grid-cols-[clamp(260px,28%,320px)_1fr] gap-10 xl:gap-14 items-start">
 
           {/* ── Profile card — fluid responsive ────────────────────── */}
-          {/*
-           * Sizing:
-           *   mobile  (<640)   w-full — fills the padded section width
-           *   sm/md   (640-1023) max-w-sm, centered — tighter on portrait tablets
-           *   lg+     (1024+)  max-w-[300px], left-aligned in the flex row, no shrink
-           */}
-          <Reveal
-            delay={0}
-            className="w-full sm:max-w-sm sm:mx-auto lg:mx-0 lg:max-w-[300px] lg:flex-shrink-0"
-          >
+          {/* grid column controls width — no manual max-w needed */}
+          <Reveal delay={0} className="w-full">
             <div
               className="w-full overflow-hidden rounded-2xl"
               style={{
@@ -256,8 +267,11 @@ export function About() {
                 ].map((stat) => (
                   <div key={stat.value} className="text-center">
                     <p
-                      className="text-2xl sm:text-3xl font-black mb-0.5"
-                      style={{ color: "hsl(188 86% 53%)" }}
+                      className="font-black mb-0.5"
+                      style={{
+                        color: "hsl(188 86% 53%)",
+                        fontSize: "clamp(1.5rem, 3.5vw, 2rem)",
+                      }}
                     >
                       {stat.value}
                     </p>
@@ -273,6 +287,7 @@ export function About() {
             </Reveal>
           </div>
         </div>
+        </div>{/* /container */}
       </section>
 
       {/* ════════════════════════════════════════════════════════════════════
