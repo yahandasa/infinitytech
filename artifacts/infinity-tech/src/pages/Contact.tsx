@@ -230,6 +230,9 @@ function SlimTextarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) 
 }
 
 // ── intl-tel-input phone field ────────────────────────────────────────────────
+// Number types from libphonenumber (used by intl-tel-input utils)
+const MOBILE_TYPES = new Set([1, 2]); // 1 = MOBILE, 2 = FIXED_LINE_OR_MOBILE
+
 interface ItiPhoneFieldProps {
   label: string;
   error?: string;
@@ -238,9 +241,11 @@ interface ItiPhoneFieldProps {
 }
 
 function ItiPhoneField({ label, error, onItiReady, onClearError }: ItiPhoneFieldProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const itiRef   = useRef<ReturnType<typeof intlTelInput> | null>(null);
-  const [focused, setFocused] = useState(false);
+  const inputRef  = useRef<HTMLInputElement>(null);
+  const itiRef    = useRef<ReturnType<typeof intlTelInput> | null>(null);
+  const [focused,    setFocused]    = useState(false);
+  // "idle" = empty, "valid" = passes isValidNumber(), "invalid" = fails
+  const [validState, setValidState] = useState<"idle" | "valid" | "invalid">("idle");
 
   useEffect(() => {
     const el = inputRef.current;
@@ -262,29 +267,44 @@ function ItiPhoneField({ label, error, onItiReady, onClearError }: ItiPhoneField
     itiRef.current = iti;
     onItiReady(iti);
 
-    // Clear error in real-time as user types or changes country
-    const clear = () => onClearError();
-    el.addEventListener("input", clear);
-    el.addEventListener("countrychange", clear);
+    // Real-time validity check on each keystroke / country switch
+    const checkValidity = () => {
+      onClearError();
+      const raw = el.value.trim();
+      if (!raw) { setValidState("idle"); return; }
+      setValidState(iti.isValidNumber() === true ? "valid" : "invalid");
+    };
+
+    el.addEventListener("input", checkValidity);
+    el.addEventListener("countrychange", checkValidity);
 
     return () => {
-      el.removeEventListener("input", clear);
-      el.removeEventListener("countrychange", clear);
+      el.removeEventListener("input", checkValidity);
+      el.removeEventListener("countrychange", checkValidity);
       iti.destroy();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const borderColor = focused
-    ? "hsl(188 86% 53%)"
-    : error
+  // Border / shadow: parent error > real-time valid state > focused > idle
+  const borderColor = error
     ? "hsl(0 84% 60%)"
+    : validState === "valid"
+    ? "#22c55e"
+    : validState === "invalid"
+    ? "hsl(0 84% 60%)"
+    : focused
+    ? "hsl(188 86% 53%)"
     : "rgba(255,255,255,0.12)";
 
-  const shadowColor = focused
-    ? "0 1px 0 hsl(188 86% 53%)"
-    : error
+  const shadowColor = error
     ? "0 1px 0 hsl(0 84% 60%)"
+    : validState === "valid"
+    ? "0 1px 0 #22c55e"
+    : validState === "invalid"
+    ? "0 1px 0 hsl(0 84% 60%)"
+    : focused
+    ? "0 1px 0 hsl(188 86% 53%)"
     : "none";
 
   return (
@@ -297,17 +317,18 @@ function ItiPhoneField({ label, error, onItiReady, onClearError }: ItiPhoneField
         {label}
       </label>
 
-      {/* Wrapper that carries the bottom-border line */}
+      {/* Bottom-border wrapper — no `required`, no browser-native validation */}
       <div style={{
         borderBottom: `1px solid ${borderColor}`,
         boxShadow: shadowColor,
-        transition: "border-color 0.2s ease, box-shadow 0.2s ease",
+        transition: "border-color 0.22s ease, box-shadow 0.22s ease",
         paddingBottom: "2px",
       }}>
         <input
           ref={inputRef}
           type="tel"
           inputMode="tel"
+          autoComplete="tel"
           style={{
             width: "100%", background: "transparent", border: "none",
             padding: "10px 0", fontSize: "14px",
@@ -319,12 +340,22 @@ function ItiPhoneField({ label, error, onItiReady, onClearError }: ItiPhoneField
         />
       </div>
 
-      {error && (
+      {/* Validity hint shown in real-time */}
+      {validState === "valid" && !error && (
+        <p style={{ fontSize: "11px", color: "#22c55e", marginTop: "5px", display: "flex", alignItems: "center", gap: "4px" }}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          رقم صحيح ✓
+        </p>
+      )}
+
+      {(error || (validState === "invalid" && !error)) && (
         <p style={{ fontSize: "11px", color: "hsl(0 84% 60%)", marginTop: "5px", display: "flex", alignItems: "center", gap: "4px" }}>
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
           </svg>
-          {error}
+          {error || "يرجى التأكد من عدد أرقام الهاتف بشكل صحيح"}
         </p>
       )}
 
@@ -457,28 +488,42 @@ export function Contact() {
   const { formState: { isSubmitting } } = form;
 
   const onSubmit = async (data: FormValues) => {
-    // ── Phone validation (outside zod — handled by intl-tel-input) ──────────
+    // ── Step 1: phone must not be empty ──────────────────────────────────────
     const iti = itiRef.current;
-
     const rawPhone = iti?.telInput.value.trim() ?? "";
     if (!rawPhone) {
       setPhoneError(t("WhatsApp number is required", "رقم الواتساب مطلوب"));
       return;
     }
 
-    // isValidNumber() → true | false | null (null = utils not loaded yet)
+    // ── Step 2: strict length + format check via isValidNumber() ─────────────
+    // Returns true | false | null (null = utils not loaded yet → let through)
     if (iti?.isValidNumber() === false) {
       setPhoneError(
-        t("Invalid number for the selected country — please check the format",
-          "رقم غير صحيح للدولة المختارة — يرجى التحقق من الصيغة"),
+        t("Please check the number of digits — it must be correct for the selected country",
+          "يرجى التأكد من عدد أرقام الهاتف بشكل صحيح"),
+      );
+      return;
+    }
+
+    // ── Step 3: mobile-type check (WhatsApp requires a mobile number) ─────────
+    // getNumberType() → 1=MOBILE, 2=FIXED_LINE_OR_MOBILE; others = not mobile
+    const numType = iti?.getNumberType() ?? -1;
+    if (iti?.isValidNumber() === true && !MOBILE_TYPES.has(numType)) {
+      setPhoneError(
+        t("Please enter a valid mobile number — WhatsApp only works on mobile",
+          "يرجى إدخال رقم موبايل صالح للواتساب"),
       );
       return;
     }
 
     setPhoneError("");
-    // getNumber() → full E.164 e.g. +201001234567
-    const phone = iti?.getNumber() ?? rawPhone;
 
+    // ── Step 4: extract full international format & debug log ─────────────────
+    const phone = iti?.getNumber() ?? rawPhone;
+    console.log("[Contact] Submitting phone →", phone);
+
+    // ── Step 5: send to API → DB ──────────────────────────────────────────────
     await submitContactForm({ ...data, phone } as any)
       .then(() => {
         toast({
@@ -628,11 +673,14 @@ export function Contact() {
                     }}
                   >
                     {isSubmitting ? (
-                      <div style={{
-                        width: 18, height: 18, borderRadius: "50%",
-                        border: "2px solid #0a0f18", borderTopColor: "transparent",
-                        animation: "spin 0.7s linear infinite",
-                      }} />
+                      <>
+                        <div style={{
+                          width: 15, height: 15, borderRadius: "50%",
+                          border: "2px solid #0a0f18", borderTopColor: "transparent",
+                          animation: "spin 0.7s linear infinite", flexShrink: 0,
+                        }} />
+                        {t("Sending…", "جاري الإرسال...")}
+                      </>
                     ) : (
                       <>
                         {t("Send Message", "إرسال الرسالة")}
