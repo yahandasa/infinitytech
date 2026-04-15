@@ -11,7 +11,8 @@ const POLL_MS    = 30_000;
 interface Message {
   id: number;
   name: string;
-  email: string;
+  email: string | null;
+  phone: string | null;
   subject: string;
   message: string;
   created_at: string;
@@ -275,8 +276,17 @@ function MessageCard({ msg, isNew }: { msg: Message; isNew: boolean }) {
                 }}>New</span>
               )}
             </p>
-            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", margin: "2px 0 0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-              {msg.email}
+            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", margin: "2px 0 0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "flex", alignItems: "center", gap: 4 }}>
+              {msg.phone ? (
+                <>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="#25D366" style={{ flexShrink: 0 }}>
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                  </svg>
+                  {msg.phone}
+                </>
+              ) : (
+                msg.email ?? "—"
+              )}
             </p>
           </div>
         </div>
@@ -304,7 +314,7 @@ function MessageCard({ msg, isNew }: { msg: Message; isNew: boolean }) {
         <span style={{ fontSize: 10, color: "rgba(255,255,255,0.2)" }}>
           {fmtDate(msg.created_at)}
         </span>
-        <div style={{ display: "flex", gap: 10 }}>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           {msg.message.length > 120 && (
             <button
               onClick={() => setExpanded(e => !e)}
@@ -316,34 +326,43 @@ function MessageCard({ msg, isNew }: { msg: Message; isNew: boolean }) {
               {expanded ? "Show less" : "Read more"}
             </button>
           )}
-          <a
-            href={`mailto:${msg.email}?subject=Re: ${encodeURIComponent(msg.subject)}`}
-            style={{
-              fontSize: 11, color: "rgba(255,255,255,0.4)",
-              textDecoration: "none", fontWeight: 600,
-              padding: "3px 10px", borderRadius: 6,
-              background: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              display: "inline-flex", alignItems: "center", gap: 4,
-              transition: "background 0.18s ease, color 0.18s ease",
-              willChange: "transform",
-            }}
-            onMouseEnter={e => {
-              const el = e.currentTarget as HTMLElement;
-              el.style.background = "rgba(34,211,238,0.1)";
-              el.style.color = "hsl(188 86% 53%)";
-            }}
-            onMouseLeave={e => {
-              const el = e.currentTarget as HTMLElement;
-              el.style.background = "rgba(255,255,255,0.05)";
-              el.style.color = "rgba(255,255,255,0.4)";
-            }}
-          >
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-            </svg>
-            Reply
-          </a>
+          {msg.phone && (
+            <a
+              href={`https://wa.me/${msg.phone.replace(/[\s\-().]/g, "")}?text=${encodeURIComponent(`مرحباً ${msg.name}،\nأنا المهندس فارس صلاح من Infinity Tech.\nبخصوص رسالتك: "${msg.subject}"\n\n`)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                fontSize: 12, fontWeight: 700,
+                padding: "5px 12px", borderRadius: 8,
+                background: "rgba(37,211,102,0.08)",
+                border: "1px solid rgba(37,211,102,0.2)",
+                color: "rgba(37,211,102,0.7)",
+                textDecoration: "none",
+                display: "inline-flex", alignItems: "center", gap: 5,
+                transition: "background 0.18s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease",
+                willChange: "transform",
+              }}
+              onMouseEnter={e => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.background = "rgba(37,211,102,0.14)";
+                el.style.borderColor = "rgba(37,211,102,0.45)";
+                el.style.color = "#25D366";
+                el.style.boxShadow = "0 0 14px rgba(37,211,102,0.2)";
+              }}
+              onMouseLeave={e => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.background = "rgba(37,211,102,0.08)";
+                el.style.borderColor = "rgba(37,211,102,0.2)";
+                el.style.color = "rgba(37,211,102,0.7)";
+                el.style.boxShadow = "none";
+              }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+              </svg>
+              رد عبر واتساب
+            </a>
+          )}
         </div>
       </div>
     </div>
@@ -352,12 +371,21 @@ function MessageCard({ msg, isNew }: { msg: Message; isNew: boolean }) {
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 function Dashboard({ pin, onLogout }: { pin: string; onLogout: () => void }) {
-  const [messages, setMessages]   = useState<Message[]>([]);
-  const [loading, setLoading]     = useState(true);
-  const [error, setError]         = useState("");
-  const [newIds, setNewIds]       = useState<Set<number>>(new Set());
-  const [lastCount, setLastCount] = useState(0);
-  const seenIds                   = useRef<Set<number>>(new Set());
+  const [messages, setMessages]     = useState<Message[]>([]);
+  const [loading, setLoading]       = useState(true);
+  const [error, setError]           = useState("");
+  const [newIds, setNewIds]         = useState<Set<number>>(new Set());
+  const [lastCount, setLastCount]   = useState(0);
+  const [notifPerm, setNotifPerm]   = useState<NotificationPermission>(
+    typeof Notification !== "undefined" ? Notification.permission : "denied"
+  );
+  const seenIds                     = useRef<Set<number>>(new Set());
+
+  async function requestNotifPermission() {
+    if (!("Notification" in window)) return;
+    const result = await Notification.requestPermission();
+    setNotifPerm(result);
+  }
 
   const fetchMessages = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
@@ -401,9 +429,8 @@ function Dashboard({ pin, onLogout }: { pin: string; onLogout: () => void }) {
     }
   }, [pin, lastCount]);
 
-  // Initial fetch + request notification permission
+  // Initial fetch only — user explicitly triggers notification permission
   useEffect(() => {
-    askNotifPermission();
     fetchMessages();
   }, []);
 
@@ -452,10 +479,48 @@ function Dashboard({ pin, onLogout }: { pin: string; onLogout: () => void }) {
           </div>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ fontSize: 12, color: "rgba(255,255,255,0.3)" }}>
             {messages.length} message{messages.length !== 1 ? "s" : ""}
           </span>
+
+          {/* Notification permission button */}
+          {"Notification" in window && notifPerm !== "granted" && (
+            <button
+              onClick={requestNotifPermission}
+              title={notifPerm === "denied" ? "Notifications blocked — enable in browser settings" : "Enable notifications"}
+              disabled={notifPerm === "denied"}
+              style={{
+                background: notifPerm === "denied" ? "rgba(248,113,113,0.06)" : "rgba(34,211,238,0.07)",
+                border: `1px solid ${notifPerm === "denied" ? "rgba(248,113,113,0.2)" : "rgba(34,211,238,0.2)"}`,
+                borderRadius: 8, padding: "6px 10px", cursor: notifPerm === "denied" ? "not-allowed" : "pointer",
+                color: notifPerm === "denied" ? "rgba(248,113,113,0.6)" : "hsl(188 86% 53% / 0.7)",
+                display: "flex", alignItems: "center", gap: 5,
+                fontSize: 11, fontWeight: 600,
+                transition: "background 0.18s ease",
+                opacity: notifPerm === "denied" ? 0.7 : 1,
+              }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                {notifPerm === "denied" && <line x1="1" y1="1" x2="23" y2="23"/>}
+              </svg>
+              {notifPerm === "denied" ? "Blocked" : "Enable alerts"}
+            </button>
+          )}
+          {notifPerm === "granted" && (
+            <span style={{
+              fontSize: 10, color: "rgba(37,211,102,0.7)", display: "flex", alignItems: "center", gap: 4,
+              background: "rgba(37,211,102,0.07)", border: "1px solid rgba(37,211,102,0.18)",
+              borderRadius: 8, padding: "6px 10px", fontWeight: 600,
+            }}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              Alerts on
+            </span>
+          )}
+
           <button
             onClick={() => fetchMessages(true)}
             title="Refresh"

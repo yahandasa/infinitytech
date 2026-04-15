@@ -5,7 +5,8 @@ import { z } from "zod/v4";
 export const contactMessages = pgTable("contact_messages", {
   id:         bigserial("id", { mode: "number" }).primaryKey(),
   name:       varchar("name", { length: 100 }).notNull(),
-  email:      varchar("email", { length: 200 }).notNull(),
+  email:      varchar("email", { length: 200 }),
+  phone:      varchar("phone", { length: 30 }),
   subject:    varchar("subject", { length: 200 }).notNull(),
   message:    text("message").notNull(),
   created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),

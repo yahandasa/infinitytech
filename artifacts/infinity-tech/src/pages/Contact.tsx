@@ -8,10 +8,13 @@ import { useToast } from "@/hooks/use-toast";
 import { submitContactForm } from "@/hooks/use-projects";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-// ── Form schema (unchanged) ───────────────────────────────────────────────────
+// ── Form schema ───────────────────────────────────────────────────────────────
 const formSchema = z.object({
-  name: z.string().min(2, "Name is too short"),
-  email: z.string().email("Invalid email address"),
+  name:    z.string().min(2, "Name is too short"),
+  phone:   z.string()
+             .min(7, "Phone number is too short")
+             .max(30, "Phone number is too long")
+             .regex(/^\+?[\d\s\-()]+$/, "Only digits, +, spaces, dashes and parentheses"),
   subject: z.string().min(5, "Subject is required"),
   message: z.string().min(10, "Message must be at least 10 characters"),
 });
@@ -261,7 +264,7 @@ export function Contact() {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { name: "", email: "", subject: "", message: "" },
+    defaultValues: { name: "", phone: "", subject: "", message: "" },
   });
 
   const onSubmit = async (data: FormValues) => {
@@ -377,11 +380,17 @@ export function Contact() {
                       placeholder={t("John Doe", "محمد أحمد")}
                     />
                   </Field>
-                  <Field label={t("Email", "البريد الإلكتروني")} error={form.formState.errors.email?.message}>
+                  <Field label={t("WhatsApp Number", "رقم الواتساب")} error={form.formState.errors.phone?.message}>
                     <SlimInput
-                      {...form.register("email")}
+                      {...form.register("phone")}
                       dir="ltr"
-                      placeholder="you@example.com"
+                      type="tel"
+                      inputMode="tel"
+                      placeholder="+20 100 000 0000"
+                      onKeyDown={e => {
+                        const allowed = ["Backspace","Delete","Tab","Enter","ArrowLeft","ArrowRight","Home","End"];
+                        if (!allowed.includes(e.key) && !/[\d\s+\-().]/.test(e.key)) e.preventDefault();
+                      }}
                     />
                   </Field>
                 </div>
