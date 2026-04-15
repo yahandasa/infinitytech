@@ -230,9 +230,6 @@ function SlimTextarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) 
 }
 
 // ── intl-tel-input phone field ────────────────────────────────────────────────
-// Number types from libphonenumber (used by intl-tel-input utils)
-const MOBILE_TYPES = new Set([1, 2]); // 1 = MOBILE, 2 = FIXED_LINE_OR_MOBILE
-
 interface ItiPhoneFieldProps {
   label: string;
   error?: string;
@@ -487,45 +484,26 @@ export function Contact() {
   });
 
   const onSubmit = async (data: FormValues) => {
-    // ── Step 1: phone must not be empty ──────────────────────────────────────
     const iti = itiRef.current;
-    const rawPhone = iti?.telInput?.value?.trim() ?? "";
-    if (!rawPhone) {
-      setPhoneError(t("WhatsApp number is required", "رقم الواتساب مطلوب"));
-      return;
-    }
-
-    // ── Step 2: strict length + format check via isValidNumber() ─────────────
-    // Returns true | false | null (null = utils not loaded yet → let through)
-    if (iti?.isValidNumber() === false) {
+    // ── Single validity gate: isValidNumber() is the only condition ──────────
+    if (!iti?.isValidNumber()) {
       setPhoneError(
-        t("Please check the number of digits — it must be correct for the selected country",
-          "يرجى التأكد من عدد أرقام الهاتف بشكل صحيح"),
-      );
-      return;
-    }
-
-    // ── Step 3: mobile-type check (WhatsApp requires a mobile number) ─────────
-    // getNumberType() → 1=MOBILE, 2=FIXED_LINE_OR_MOBILE; others = not mobile
-    const numType = iti?.getNumberType() ?? -1;
-    if (iti?.isValidNumber() === true && !MOBILE_TYPES.has(numType)) {
-      setPhoneError(
-        t("Please enter a valid mobile number — WhatsApp only works on mobile",
-          "يرجى إدخال رقم موبايل صالح للواتساب"),
+        t("Please enter a valid phone number with a complete number of digits",
+          "يرجى إدخال رقم هاتف صحيح بعدد أرقام مكتمل"),
       );
       return;
     }
 
     setPhoneError("");
 
-    // ── Step 4: extract full international format & debug log ─────────────────
-    const phone = iti?.getNumber() ?? rawPhone;
-    console.log("[Contact] Submitting phone →", phone);
+    // ── Capture full international format via getNumber() ─────────────────────
+    const finalPhoneNumber = iti.getNumber();
+    console.log("Sending to DB:", finalPhoneNumber);
 
-    // ── Step 5: send to API → DB (isSending gates the button) ────────────────
+    // ── Send to API → DB (isSending gates the button) ────────────────────────
     setIsSending(true);
     try {
-      await submitContactForm({ ...data, phone } as any);
+      await submitContactForm({ ...data, phone: finalPhoneNumber } as any);
       toast({
         title: t("Message Sent", "تم إرسال الرسالة"),
         description: t(
