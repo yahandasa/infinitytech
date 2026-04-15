@@ -234,9 +234,10 @@ interface ItiPhoneFieldProps {
   label: string;
   error?: string;
   onItiReady: (iti: ReturnType<typeof intlTelInput>) => void;
+  onClearError: () => void;
 }
 
-function ItiPhoneField({ label, error, onItiReady }: ItiPhoneFieldProps) {
+function ItiPhoneField({ label, error, onItiReady, onClearError }: ItiPhoneFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const itiRef   = useRef<ReturnType<typeof intlTelInput> | null>(null);
   const [focused, setFocused] = useState(false);
@@ -261,7 +262,16 @@ function ItiPhoneField({ label, error, onItiReady }: ItiPhoneFieldProps) {
     itiRef.current = iti;
     onItiReady(iti);
 
-    return () => { iti.destroy(); };
+    // Clear error in real-time as user types or changes country
+    const clear = () => onClearError();
+    el.addEventListener("input", clear);
+    el.addEventListener("countrychange", clear);
+
+    return () => {
+      el.removeEventListener("input", clear);
+      el.removeEventListener("countrychange", clear);
+      iti.destroy();
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -450,18 +460,23 @@ export function Contact() {
 
   const onSubmit = async (data: FormValues) => {
     // ── Validate phone via intl-tel-input ──────────────────────────────────
-    if (!itiRef.current) {
+    const iti = itiRef.current;
+    if (!iti) {
       setPhoneError(t("Please enter your WhatsApp number", "يرجى إدخال رقم الواتساب"));
       return;
     }
 
-    const rawPhone = (itiRef.current as any).telInput?.value?.trim() || "";
+    // Read directly from the underlying input element
+    const rawPhone = iti.telInput.value.trim();
     if (!rawPhone) {
       setPhoneError(t("WhatsApp number is required", "رقم الواتساب مطلوب"));
       return;
     }
 
-    if (!(itiRef.current as any).isValidNumber()) {
+    // isValidNumber() returns true | false | null (null = utils not yet loaded)
+    // Treat null as "not yet validated" → skip strict check, let it through
+    const valid = iti.isValidNumber();
+    if (valid === false) {
       setPhoneError(
         t("Invalid number for the selected country — please check the format",
           "رقم غير صحيح للدولة المختارة — يرجى التحقق من الصيغة"),
@@ -470,7 +485,8 @@ export function Contact() {
     }
 
     setPhoneError("");
-    const phone: string = (itiRef.current as any).getNumber(); // e.g. +201001234567
+    // getNumber() returns full E.164 format e.g. +201001234567
+    const phone: string = iti.getNumber();
 
     setIsSubmitting(true);
     try {
@@ -483,7 +499,7 @@ export function Contact() {
         ),
       });
       form.reset();
-      (itiRef.current as any).telInput.value = "";
+      iti.telInput.value = "";
     } catch {
       toast({
         variant: "destructive",
@@ -561,7 +577,7 @@ export function Contact() {
                 {t("Send a Message", "أرسل رسالة")}
               </p>
 
-              <form onSubmit={form.handleSubmit(onSubmit)} style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
+              <form onSubmit={form.handleSubmit(onSubmit)} noValidate style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-7">
                   <Field label={t("Name", "الاسم")} error={form.formState.errors.name?.message}>
                     <SlimInput
@@ -576,6 +592,7 @@ export function Contact() {
                     label={t("WhatsApp Number", "رقم الواتساب")}
                     error={phoneError}
                     onItiReady={handleItiReady}
+                    onClearError={() => setPhoneError("")}
                   />
                 </div>
 
