@@ -1,4 +1,6 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import intlTelInput from "intl-tel-input";
+import "intl-tel-input/dist/css/intlTelInput.css";
 import { SEO } from "@/components/SEO";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,19 +10,16 @@ import { useToast } from "@/hooks/use-toast";
 import { submitContactForm } from "@/hooks/use-projects";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-// ── Form schema ───────────────────────────────────────────────────────────────
+// ── Form schema (phone validated separately via ITI) ──────────────────────────
 const formSchema = z.object({
   name:    z.string().min(2, "Name is too short"),
-  phone:   z.string()
-             .min(7, "Phone number is too short")
-             .max(30, "Phone number is too long")
-             .regex(/^\+?[\d\s\-()]+$/, "Only digits, +, spaces, dashes and parentheses"),
   subject: z.string().min(5, "Subject is required"),
   message: z.string().min(10, "Message must be at least 10 characters"),
 });
 type FormValues = z.infer<typeof formSchema>;
 
-// ── CSS-only fade-in (no framer-motion, no layout-thrash) ────────────────────
+
+// ── CSS-only fade-in ─────────────────────────────────────────────────────────
 function useFadeIn(threshold = 0.05) {
   const ref = useRef<HTMLDivElement>(null);
   const [vis, setVis] = useState(false);
@@ -121,7 +120,7 @@ const SOCIALS = [
   },
 ];
 
-// ── Glowing social card ───────────────────────────────────────────────────────
+// ── Social card ───────────────────────────────────────────────────────────────
 function SocialCard({ s }: { s: typeof SOCIALS[0] }) {
   const [hovered, setHovered] = useState(false);
   return (
@@ -132,45 +131,30 @@ function SocialCard({ s }: { s: typeof SOCIALS[0] }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "14px",
-        padding: "14px 18px",
-        borderRadius: "14px",
+        display: "flex", alignItems: "center", gap: "14px",
+        padding: "14px 18px", borderRadius: "14px",
         background: hovered ? "rgba(255,255,255,0.04)" : "rgba(10,15,24,0.6)",
-        backdropFilter: "blur(10px)",
-        WebkitBackdropFilter: "blur(10px)",
+        backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)",
         border: `1px solid ${hovered ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.06)"}`,
         boxShadow: hovered ? s.glow : "none",
         color: hovered ? s.color : "rgba(255,255,255,0.45)",
         textDecoration: "none",
         transition: "background 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease, color 0.22s ease",
         willChange: "transform",
-        cursor: "pointer",
       }}
     >
-      <span style={{ flexShrink: 0, transition: "color 0.22s ease" }}>
-        {s.icon}
-      </span>
+      <span style={{ flexShrink: 0 }}>{s.icon}</span>
       <span style={{ minWidth: 0 }}>
         <span style={{
-          display: "block",
-          fontSize: "13px",
-          fontWeight: 600,
+          display: "block", fontSize: "13px", fontWeight: 600, lineHeight: 1.3,
           color: hovered ? s.color : "rgba(255,255,255,0.75)",
           transition: "color 0.22s ease",
-          lineHeight: 1.3,
         }}>
           {s.label}
         </span>
         <span style={{
-          display: "block",
-          fontSize: "11px",
-          color: "rgba(255,255,255,0.3)",
-          marginTop: "2px",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
+          display: "block", fontSize: "11px", color: "rgba(255,255,255,0.3)",
+          marginTop: "2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
         }}>
           {s.sub}
         </span>
@@ -179,20 +163,16 @@ function SocialCard({ s }: { s: typeof SOCIALS[0] }) {
   );
 }
 
-// ── Sleek form field ──────────────────────────────────────────────────────────
+// ── Shared field wrapper ──────────────────────────────────────────────────────
 function Field({ label, error, children }: {
   label: string; error?: string; children: React.ReactNode;
 }) {
   return (
     <div>
       <label style={{
-        display: "block",
-        fontSize: "11px",
-        fontWeight: 600,
-        letterSpacing: "0.1em",
-        textTransform: "uppercase",
-        color: "rgba(255,255,255,0.35)",
-        marginBottom: "10px",
+        display: "block", fontSize: "11px", fontWeight: 600,
+        letterSpacing: "0.1em", textTransform: "uppercase",
+        color: "rgba(255,255,255,0.35)", marginBottom: "10px",
       }}>
         {label}
       </label>
@@ -207,14 +187,10 @@ function Field({ label, error, children }: {
 }
 
 const inputBase: React.CSSProperties = {
-  width: "100%",
-  background: "transparent",
-  border: "none",
+  width: "100%", background: "transparent", border: "none",
   borderBottom: "1px solid rgba(255,255,255,0.12)",
-  padding: "10px 0",
-  fontSize: "14px",
-  color: "rgba(255,255,255,0.85)",
-  outline: "none",
+  padding: "10px 0", fontSize: "14px",
+  color: "rgba(255,255,255,0.85)", outline: "none",
   transition: "border-color 0.2s ease, box-shadow 0.2s ease",
   fontFamily: "inherit",
 };
@@ -242,13 +218,10 @@ function SlimTextarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) 
     <textarea
       {...props}
       style={{
-        ...inputBase,
-        resize: "none",
-        minHeight: "100px",
+        ...inputBase, resize: "none", minHeight: "100px", display: "block",
         borderBottomColor: focused ? "hsl(188 86% 53%)" : "rgba(255,255,255,0.12)",
         boxShadow: focused ? "0 1px 0 hsl(188 86% 53%)" : "none",
         caretColor: "hsl(188 86% 53%)",
-        display: "block",
       }}
       onFocus={e => { setFocused(true); props.onFocus?.(e); }}
       onBlur={e => { setFocused(false); props.onBlur?.(e); }}
@@ -256,21 +229,252 @@ function SlimTextarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) 
   );
 }
 
+// ── intl-tel-input phone field ────────────────────────────────────────────────
+interface ItiPhoneFieldProps {
+  label: string;
+  error?: string;
+  onItiReady: (iti: ReturnType<typeof intlTelInput>) => void;
+}
+
+function ItiPhoneField({ label, error, onItiReady }: ItiPhoneFieldProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const itiRef   = useRef<ReturnType<typeof intlTelInput> | null>(null);
+  const [focused, setFocused] = useState(false);
+
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+
+    const iti = intlTelInput(el, {
+      initialCountry: "auto",
+      geoIpLookup: (cb) => {
+        fetch("https://ipapi.co/json")
+          .then(r => r.json())
+          .then(d => cb(d.country_code || "EG"))
+          .catch(() => cb("EG"));
+      },
+      separateDialCode: true,
+      countryOrder: ["eg", "sa", "ae", "kw", "gb", "us"],
+      loadUtils: () => import("intl-tel-input/dist/js/utils.js"),
+    });
+
+    itiRef.current = iti;
+    onItiReady(iti);
+
+    return () => { iti.destroy(); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const borderColor = focused
+    ? "hsl(188 86% 53%)"
+    : error
+    ? "hsl(0 84% 60%)"
+    : "rgba(255,255,255,0.12)";
+
+  const shadowColor = focused
+    ? "0 1px 0 hsl(188 86% 53%)"
+    : error
+    ? "0 1px 0 hsl(0 84% 60%)"
+    : "none";
+
+  return (
+    <div>
+      <label style={{
+        display: "block", fontSize: "11px", fontWeight: 600,
+        letterSpacing: "0.1em", textTransform: "uppercase",
+        color: "rgba(255,255,255,0.35)", marginBottom: "10px",
+      }}>
+        {label}
+      </label>
+
+      {/* Wrapper that carries the bottom-border line */}
+      <div style={{
+        borderBottom: `1px solid ${borderColor}`,
+        boxShadow: shadowColor,
+        transition: "border-color 0.2s ease, box-shadow 0.2s ease",
+        paddingBottom: "2px",
+      }}>
+        <input
+          ref={inputRef}
+          type="tel"
+          inputMode="tel"
+          style={{
+            width: "100%", background: "transparent", border: "none",
+            padding: "10px 0", fontSize: "14px",
+            color: "rgba(255,255,255,0.85)", outline: "none",
+            caretColor: "hsl(188 86% 53%)", fontFamily: "inherit",
+          }}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+        />
+      </div>
+
+      {error && (
+        <p style={{ fontSize: "11px", color: "hsl(0 84% 60%)", marginTop: "5px", display: "flex", alignItems: "center", gap: "4px" }}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          {error}
+        </p>
+      )}
+
+      {/* ── Dark-theme CSS overrides for intl-tel-input ── */}
+      <style>{`
+        /* Wrapper */
+        .iti { width: 100%; }
+
+        /* Flag-selector button */
+        .iti__flag-container { padding: 0; }
+        .iti__selected-flag {
+          background: transparent !important;
+          border: none !important;
+          border-radius: 0 !important;
+          padding: 10px 10px 10px 0 !important;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .iti__selected-flag:hover,
+        .iti__selected-flag:focus {
+          background: rgba(34,211,238,0.06) !important;
+          outline: none !important;
+        }
+        .iti__selected-dial-code {
+          color: rgba(255,255,255,0.5) !important;
+          font-size: 13px !important;
+          font-family: inherit !important;
+        }
+        .iti__arrow {
+          border-top-color: rgba(255,255,255,0.3) !important;
+          border-bottom-color: rgba(255,255,255,0.3) !important;
+          margin-left: 4px !important;
+        }
+        .iti__arrow--up { border-bottom-color: hsl(188 86% 53%) !important; }
+
+        /* Phone input itself */
+        .iti input[type=tel], .iti input[type=text] {
+          background: transparent !important;
+          color: rgba(255,255,255,0.85) !important;
+          border: none !important;
+          outline: none !important;
+          caret-color: hsl(188 86% 53%);
+        }
+        .iti input[type=tel]::placeholder {
+          color: rgba(255,255,255,0.2) !important;
+        }
+
+        /* Dropdown */
+        .iti__country-list {
+          background: rgba(10,18,34,0.97) !important;
+          backdrop-filter: blur(20px) !important;
+          -webkit-backdrop-filter: blur(20px) !important;
+          border: 1px solid rgba(34,211,238,0.15) !important;
+          border-radius: 12px !important;
+          box-shadow: 0 16px 48px rgba(0,0,0,0.6), 0 0 0 1px rgba(34,211,238,0.08) !important;
+          padding: 6px 0 !important;
+          max-height: 260px !important;
+          overflow-y: auto !important;
+          scrollbar-width: thin !important;
+          scrollbar-color: rgba(34,211,238,0.2) transparent !important;
+          margin-top: 4px !important;
+          z-index: 9999 !important;
+        }
+        .iti__country-list::-webkit-scrollbar { width: 4px; }
+        .iti__country-list::-webkit-scrollbar-track { background: transparent; }
+        .iti__country-list::-webkit-scrollbar-thumb {
+          background: rgba(34,211,238,0.25); border-radius: 4px;
+        }
+
+        /* Search box */
+        .iti__search-input {
+          background: rgba(255,255,255,0.04) !important;
+          border: none !important;
+          border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+          border-radius: 0 !important;
+          color: rgba(255,255,255,0.8) !important;
+          font-size: 13px !important;
+          padding: 10px 14px !important;
+          width: 100% !important;
+          outline: none !important;
+          font-family: inherit !important;
+        }
+        .iti__search-input::placeholder { color: rgba(255,255,255,0.25) !important; }
+        .iti__search-input:focus { border-bottom-color: rgba(34,211,238,0.35) !important; }
+
+        /* Country items */
+        .iti__country {
+          padding: 9px 14px !important;
+          color: rgba(255,255,255,0.65) !important;
+          font-size: 13px !important;
+          display: flex !important;
+          align-items: center !important;
+          gap: 10px !important;
+          cursor: pointer !important;
+          transition: background 0.12s ease !important;
+        }
+        .iti__country:hover { background: rgba(34,211,238,0.08) !important; color: #fff !important; }
+        .iti__country.iti__highlight {
+          background: rgba(34,211,238,0.12) !important;
+          color: #fff !important;
+        }
+        .iti__country-name { color: inherit !important; }
+        .iti__dial-code { color: rgba(255,255,255,0.35) !important; font-size: 12px !important; }
+
+        /* Divider between preferred + all countries */
+        .iti__divider {
+          border-color: rgba(255,255,255,0.06) !important;
+          margin: 4px 0 !important;
+        }
+      `}</style>
+    </div>
+  );
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 export function Contact() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [phoneError, setPhoneError]     = useState("");
   const { t, isRTL } = useLanguage();
+  const itiRef = useRef<ReturnType<typeof intlTelInput> | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { name: "", phone: "", subject: "", message: "" },
+    defaultValues: { name: "", subject: "", message: "" },
   });
 
+  const handleItiReady = useCallback((iti: ReturnType<typeof intlTelInput>) => {
+    itiRef.current = iti;
+  }, []);
+
   const onSubmit = async (data: FormValues) => {
+    // ── Validate phone via intl-tel-input ──────────────────────────────────
+    if (!itiRef.current) {
+      setPhoneError(t("Please enter your WhatsApp number", "يرجى إدخال رقم الواتساب"));
+      return;
+    }
+
+    const rawPhone = (itiRef.current as any).telInput?.value?.trim() || "";
+    if (!rawPhone) {
+      setPhoneError(t("WhatsApp number is required", "رقم الواتساب مطلوب"));
+      return;
+    }
+
+    if (!(itiRef.current as any).isValidNumber()) {
+      setPhoneError(
+        t("Invalid number for the selected country — please check the format",
+          "رقم غير صحيح للدولة المختارة — يرجى التحقق من الصيغة"),
+      );
+      return;
+    }
+
+    setPhoneError("");
+    const phone: string = (itiRef.current as any).getNumber(); // e.g. +201001234567
+
     setIsSubmitting(true);
     try {
-      await submitContactForm(data);
+      await submitContactForm({ ...data, phone } as any);
       toast({
         title: t("Message Sent", "تم إرسال الرسالة"),
         description: t(
@@ -279,6 +483,7 @@ export function Contact() {
         ),
       });
       form.reset();
+      (itiRef.current as any).telInput.value = "";
     } catch {
       toast({
         variant: "destructive",
@@ -301,15 +506,11 @@ export function Contact() {
         keywords="contact hardware engineer, PCB design consulting, embedded systems"
       />
 
-      {/* Background glow — same as Hero & About */}
       <div
         className="absolute inset-0 z-0 pointer-events-none"
-        style={{
-          background: "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(34,211,238,0.055) 0%, transparent 68%)",
-        }}
+        style={{ background: "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(34,211,238,0.055) 0%, transparent 68%)" }}
       />
 
-      {/* Navbar clearance */}
       <div className="h-[4.5rem]" />
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 sm:pt-14 pb-20">
@@ -348,26 +549,15 @@ export function Contact() {
 
           {/* ── Left: Form ───────────────────────────────────────────────── */}
           <Reveal delay={80}>
-            <div
-              style={{
-                background: "rgba(10,15,24,0.6)",
-                backdropFilter: "blur(14px)",
-                WebkitBackdropFilter: "blur(14px)",
-                border: "1px solid rgba(255,255,255,0.07)",
-                borderRadius: "20px",
-                padding: "clamp(24px, 4vw, 44px)",
-              }}
-            >
-              <p
-                style={{
-                  fontSize: "11px",
-                  fontWeight: 700,
-                  letterSpacing: "0.18em",
-                  textTransform: "uppercase",
-                  color: "rgba(255,255,255,0.3)",
-                  marginBottom: "28px",
-                }}
-              >
+            <div style={{
+              background: "rgba(10,15,24,0.6)", backdropFilter: "blur(14px)",
+              WebkitBackdropFilter: "blur(14px)", border: "1px solid rgba(255,255,255,0.07)",
+              borderRadius: "20px", padding: "clamp(24px, 4vw, 44px)",
+            }}>
+              <p style={{
+                fontSize: "11px", fontWeight: 700, letterSpacing: "0.18em",
+                textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: "28px",
+              }}>
                 {t("Send a Message", "أرسل رسالة")}
               </p>
 
@@ -380,19 +570,13 @@ export function Contact() {
                       placeholder={t("John Doe", "محمد أحمد")}
                     />
                   </Field>
-                  <Field label={t("WhatsApp Number", "رقم الواتساب")} error={form.formState.errors.phone?.message}>
-                    <SlimInput
-                      {...form.register("phone")}
-                      dir="ltr"
-                      type="tel"
-                      inputMode="tel"
-                      placeholder="+20 100 000 0000"
-                      onKeyDown={e => {
-                        const allowed = ["Backspace","Delete","Tab","Enter","ArrowLeft","ArrowRight","Home","End"];
-                        if (!allowed.includes(e.key) && !/[\d\s+\-().]/.test(e.key)) e.preventDefault();
-                      }}
-                    />
-                  </Field>
+
+                  {/* intl-tel-input phone field */}
+                  <ItiPhoneField
+                    label={t("WhatsApp Number", "رقم الواتساب")}
+                    error={phoneError}
+                    onItiReady={handleItiReady}
+                  />
                 </div>
 
                 <Field label={t("Subject", "الموضوع")} error={form.formState.errors.subject?.message}>
@@ -417,16 +601,9 @@ export function Contact() {
                     type="submit"
                     disabled={isSubmitting}
                     style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      padding: "13px 32px",
-                      background: "hsl(188 86% 53%)",
-                      color: "#0a0f18",
-                      fontWeight: 700,
-                      fontSize: "14px",
-                      borderRadius: "12px",
-                      border: "none",
+                      display: "inline-flex", alignItems: "center", gap: "8px",
+                      padding: "13px 32px", background: "hsl(188 86% 53%)", color: "#0a0f18",
+                      fontWeight: 700, fontSize: "14px", borderRadius: "12px", border: "none",
                       cursor: isSubmitting ? "not-allowed" : "pointer",
                       opacity: isSubmitting ? 0.6 : 1,
                       transition: "background 0.2s ease, box-shadow 0.25s ease",
@@ -465,40 +642,25 @@ export function Contact() {
           {/* ── Right: Social + Location ─────────────────────────────────── */}
           <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
 
-            {/* Connect section */}
             <Reveal delay={160}>
-              <p
-                style={{
-                  fontSize: "11px", fontWeight: 700, letterSpacing: "0.18em",
-                  textTransform: "uppercase", color: "rgba(255,255,255,0.3)",
-                  marginBottom: "14px",
-                }}
-              >
+              <p style={{
+                fontSize: "11px", fontWeight: 700, letterSpacing: "0.18em",
+                textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: "14px",
+              }}>
                 {t("Connect with me", "تواصل معي")}
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                {SOCIALS.map((s) => (
-                  <SocialCard key={s.id} s={s} />
-                ))}
+                {SOCIALS.map((s) => <SocialCard key={s.id} s={s} />)}
               </div>
             </Reveal>
 
-            {/* Location */}
             <Reveal delay={240}>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: "14px",
-                  padding: "16px 18px",
-                  borderRadius: "14px",
-                  background: "rgba(10,15,24,0.5)",
-                  border: "1px solid rgba(255,255,255,0.06)",
-                }}
-              >
-                <MapPin
-                  style={{ width: 18, height: 18, flexShrink: 0, marginTop: 2, color: "hsl(188 86% 53% / 0.7)" }}
-                />
+              <div style={{
+                display: "flex", alignItems: "flex-start", gap: "14px",
+                padding: "16px 18px", borderRadius: "14px",
+                background: "rgba(10,15,24,0.5)", border: "1px solid rgba(255,255,255,0.06)",
+              }}>
+                <MapPin style={{ width: 18, height: 18, flexShrink: 0, marginTop: 2, color: "hsl(188 86% 53% / 0.7)" }} />
                 <div>
                   <p style={{ fontSize: "13px", fontWeight: 600, color: "rgba(255,255,255,0.7)", lineHeight: 1.4 }}>
                     {t("Alexandria, Egypt", "الإسكندرية، مصر")}
@@ -513,6 +675,8 @@ export function Contact() {
 
         </div>
       </div>
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
