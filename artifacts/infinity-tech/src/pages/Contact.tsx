@@ -489,7 +489,7 @@ export function Contact() {
   const onSubmit = async (data: FormValues) => {
     // ── Step 1: phone must not be empty ──────────────────────────────────────
     const iti = itiRef.current;
-    const rawPhone = iti?.telInput.value.trim() ?? "";
+    const rawPhone = iti?.telInput?.value?.trim() ?? "";
     if (!rawPhone) {
       setPhoneError(t("WhatsApp number is required", "رقم الواتساب مطلوب"));
       return;
@@ -534,7 +534,7 @@ export function Contact() {
         ),
       });
       form.reset();
-      if (iti) iti.telInput.value = "";
+      if (iti?.telInput) iti.telInput.value = "";
     } catch {
       toast({
         variant: "destructive",
