@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import intlTelInput from "intl-tel-input";
 import "intl-tel-input/dist/css/intlTelInput.css";
 import { SEO } from "@/components/SEO";
@@ -444,39 +444,30 @@ function ItiPhoneField({ label, error, onItiReady, onClearError }: ItiPhoneField
 // ── Page ──────────────────────────────────────────────────────────────────────
 export function Contact() {
   const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [phoneError, setPhoneError]     = useState("");
+  const [phoneError, setPhoneError] = useState("");
   const { t, isRTL } = useLanguage();
   const itiRef = useRef<ReturnType<typeof intlTelInput> | null>(null);
+  const handleItiReady = (iti: ReturnType<typeof intlTelInput>) => { itiRef.current = iti; };
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: { name: "", subject: "", message: "" },
   });
 
-  const handleItiReady = useCallback((iti: ReturnType<typeof intlTelInput>) => {
-    itiRef.current = iti;
-  }, []);
+  const { formState: { isSubmitting } } = form;
 
   const onSubmit = async (data: FormValues) => {
-    // ── Validate phone via intl-tel-input ──────────────────────────────────
+    // ── Phone validation (outside zod — handled by intl-tel-input) ──────────
     const iti = itiRef.current;
-    if (!iti) {
-      setPhoneError(t("Please enter your WhatsApp number", "يرجى إدخال رقم الواتساب"));
-      return;
-    }
 
-    // Read directly from the underlying input element
-    const rawPhone = iti.telInput.value.trim();
+    const rawPhone = iti?.telInput.value.trim() ?? "";
     if (!rawPhone) {
       setPhoneError(t("WhatsApp number is required", "رقم الواتساب مطلوب"));
       return;
     }
 
-    // isValidNumber() returns true | false | null (null = utils not yet loaded)
-    // Treat null as "not yet validated" → skip strict check, let it through
-    const valid = iti.isValidNumber();
-    if (valid === false) {
+    // isValidNumber() → true | false | null (null = utils not loaded yet)
+    if (iti?.isValidNumber() === false) {
       setPhoneError(
         t("Invalid number for the selected country — please check the format",
           "رقم غير صحيح للدولة المختارة — يرجى التحقق من الصيغة"),
@@ -485,30 +476,28 @@ export function Contact() {
     }
 
     setPhoneError("");
-    // getNumber() returns full E.164 format e.g. +201001234567
-    const phone: string = iti.getNumber();
+    // getNumber() → full E.164 e.g. +201001234567
+    const phone = iti?.getNumber() ?? rawPhone;
 
-    setIsSubmitting(true);
-    try {
-      await submitContactForm({ ...data, phone } as any);
-      toast({
-        title: t("Message Sent", "تم إرسال الرسالة"),
-        description: t(
-          "Thanks for reaching out! I'll get back to you soon.",
-          "شكرًا لتواصلك! سأرد عليك في أقرب وقت.",
-        ),
+    await submitContactForm({ ...data, phone } as any)
+      .then(() => {
+        toast({
+          title: t("Message Sent", "تم إرسال الرسالة"),
+          description: t(
+            "Thanks for reaching out! I'll get back to you soon.",
+            "شكرًا لتواصلك! سأرد عليك في أقرب وقت.",
+          ),
+        });
+        form.reset();
+        if (iti) iti.telInput.value = "";
+      })
+      .catch(() => {
+        toast({
+          variant: "destructive",
+          title: t("Error", "خطأ"),
+          description: t("Something went wrong. Please try again.", "حدث خطأ ما. يرجى المحاولة مرة أخرى."),
+        });
       });
-      form.reset();
-      iti.telInput.value = "";
-    } catch {
-      toast({
-        variant: "destructive",
-        title: t("Error", "خطأ"),
-        description: t("Something went wrong. Please try again.", "حدث خطأ ما. يرجى المحاولة مرة أخرى."),
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   return (
