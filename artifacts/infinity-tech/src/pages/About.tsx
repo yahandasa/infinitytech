@@ -99,7 +99,7 @@ export function About() {
           • sidebar width: clamp(260px, 28%, 320px) — fluid like col-span-5
           • navbar clearance via spacer div, not top-padding jumps
           ════════════════════════════════════════════════════════════════════ */}
-      <section className="relative w-full overflow-hidden">
+      <section className="relative w-full overflow-hidden lg:min-h-screen lg:flex lg:flex-col">
 
         {/* Background glow — identical to Hero */}
         <div
@@ -113,10 +113,11 @@ export function About() {
         {/* Navbar clearance — same spacer pattern as Hero */}
         <div className="h-[4.5rem]" />
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12 pb-4">
+        {/* lg: grows to fill remaining viewport height and centres content */}
+        <div className="relative z-10 w-full lg:flex-1 lg:flex lg:items-center max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12 lg:pt-0 pb-16 lg:pb-0">
 
         {/* fluid grid: 1-col mobile → [sidebar | content] desktop */}
-        <div className="grid grid-cols-1 lg:grid-cols-[clamp(260px,28%,320px)_1fr] gap-10 xl:gap-14 items-start">
+        <div className="w-full grid grid-cols-1 lg:grid-cols-[clamp(260px,28%,320px)_1fr] gap-10 xl:gap-14 items-start">
 
           {/* ── Profile card — fluid responsive ────────────────────── */}
           {/* grid column controls width — no manual max-w needed */}
