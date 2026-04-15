@@ -476,6 +476,7 @@ function ItiPhoneField({ label, error, onItiReady, onClearError }: ItiPhoneField
 export function Contact() {
   const { toast } = useToast();
   const [phoneError, setPhoneError] = useState("");
+  const [isSending,  setIsSending]  = useState(false);
   const { t, isRTL } = useLanguage();
   const itiRef = useRef<ReturnType<typeof intlTelInput> | null>(null);
   const handleItiReady = (iti: ReturnType<typeof intlTelInput>) => { itiRef.current = iti; };
@@ -484,8 +485,6 @@ export function Contact() {
     resolver: zodResolver(formSchema),
     defaultValues: { name: "", subject: "", message: "" },
   });
-
-  const { formState: { isSubmitting } } = form;
 
   const onSubmit = async (data: FormValues) => {
     // ── Step 1: phone must not be empty ──────────────────────────────────────
@@ -523,26 +522,28 @@ export function Contact() {
     const phone = iti?.getNumber() ?? rawPhone;
     console.log("[Contact] Submitting phone →", phone);
 
-    // ── Step 5: send to API → DB ──────────────────────────────────────────────
-    await submitContactForm({ ...data, phone } as any)
-      .then(() => {
-        toast({
-          title: t("Message Sent", "تم إرسال الرسالة"),
-          description: t(
-            "Thanks for reaching out! I'll get back to you soon.",
-            "شكرًا لتواصلك! سأرد عليك في أقرب وقت.",
-          ),
-        });
-        form.reset();
-        if (iti) iti.telInput.value = "";
-      })
-      .catch(() => {
-        toast({
-          variant: "destructive",
-          title: t("Error", "خطأ"),
-          description: t("Something went wrong. Please try again.", "حدث خطأ ما. يرجى المحاولة مرة أخرى."),
-        });
+    // ── Step 5: send to API → DB (isSending gates the button) ────────────────
+    setIsSending(true);
+    try {
+      await submitContactForm({ ...data, phone } as any);
+      toast({
+        title: t("Message Sent", "تم إرسال الرسالة"),
+        description: t(
+          "Thanks for reaching out! I'll get back to you soon.",
+          "شكرًا لتواصلك! سأرد عليك في أقرب وقت.",
+        ),
       });
+      form.reset();
+      if (iti) iti.telInput.value = "";
+    } catch {
+      toast({
+        variant: "destructive",
+        title: t("Error", "خطأ"),
+        description: t("Something went wrong. Please try again.", "حدث خطأ ما. يرجى المحاولة مرة أخرى."),
+      });
+    } finally {
+      setIsSending(false); // always runs — button is never permanently disabled
+    }
   };
 
   return (
@@ -650,18 +651,18 @@ export function Contact() {
                 <div>
                   <button
                     type="submit"
-                    disabled={isSubmitting}
+                    disabled={isSending}
                     style={{
                       display: "inline-flex", alignItems: "center", gap: "8px",
                       padding: "13px 32px", background: "hsl(188 86% 53%)", color: "#0a0f18",
                       fontWeight: 700, fontSize: "14px", borderRadius: "12px", border: "none",
-                      cursor: isSubmitting ? "not-allowed" : "pointer",
-                      opacity: isSubmitting ? 0.6 : 1,
+                      cursor: isSending ? "not-allowed" : "pointer",
+                      opacity: isSending ? 0.6 : 1,
                       transition: "background 0.2s ease, box-shadow 0.25s ease",
                       willChange: "transform",
                     }}
                     onMouseEnter={e => {
-                      if (isSubmitting) return;
+                      if (isSending) return;
                       const el = e.currentTarget as HTMLElement;
                       el.style.background = "hsl(188 86% 46%)";
                       el.style.boxShadow = "0 0 28px rgba(34,211,238,0.4)";
@@ -672,7 +673,7 @@ export function Contact() {
                       el.style.boxShadow = "none";
                     }}
                   >
-                    {isSubmitting ? (
+                    {isSending ? (
                       <>
                         <div style={{
                           width: 15, height: 15, borderRadius: "50%",
